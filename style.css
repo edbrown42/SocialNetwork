@@ -38,7 +38,48 @@ text {
         text-align: center;
     }
 
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.x.axis path {
+    display: block;
+}
+body {
+    font-size: 10px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    text-align: center;
+}
+#title {
+    font-size: 20px;
+    padding-bottom: 10px;
+    padding-top: 20px;
+    font-weight: 300;
+}
 
+#explanation {
+    font-size: 12px;
+    max-width: 620px;
+    margin: 0 auto;
+    padding-top: 10px;
+    color: #ababab;
+    font-weight: 300;
+}
+
+.brush .extent {
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}
+.resize {
+    display: inline !important; /* show when empty */
+    fill: #7A7A7A;
+    fill-opacity: 1;
+    stroke: #7A7A7A;
+    stroke-width: 2px;
+}
 /*
 .BarChart{
   width: 960px;
