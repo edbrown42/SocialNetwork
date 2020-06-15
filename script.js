@@ -12,21 +12,49 @@ let networkLinksFiltered = []; //updated links list based on drop down selection
 let userNames = ["---ALL USERS---"];
 let sortedUserNames = [];
 let margin = {top:20, right: 120, bottom: 20, left: 120};
-let width = 2000 - margin.right - margin.left;
-let height = 1000 - margin.top - margin.bottom;
+let width = 1000 - margin.right - margin.left;
+let height = 750 - margin.top - margin.bottom;
 
-let svg = d3.select("body").append("svg")
+var zoom = d3.behavior.zoom()
+    .scaleExtent([-5,10])
+    .on("zoom", zoomed)
+
+let svgSoical = d3.select("#SocialNetwork").append("svg")
     .attr("width", width + margin.right + margin.left)
     .attr("height", height + margin.top + margin.bottom)
+    //.attr('x',10)
+    .style("border", "1px solid black")
+   // .style('position','absolute')
+    .call(zoom)
+    .append('svg:g');
+    
+    /*.attr("width", "100%")
+    .attr("height", "100%")
+    .call(d3.behavior.zoom().on("zoom", function () {
+        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+    }))
+    .append("g")*/
+
+    //.append("svg")
+    //.attr("width", width + margin.right + margin.left)
+    //.attr("height", height + margin.top + margin.bottom)
        // .append("g")
     //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+let svg= d3.select("#BarChart").append("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+    
+
 let force = d3.layout.force()
-    .gravity(0.1)
-    .distance(100)
-    .linkDistance(60)
-    .charge(-100)
+    //.gravity(0.1)
+    //.distance(100)
+    .linkDistance(60) //originally 60
+    .charge(-40) //originally -100
     .size([width, height]);
+
+
+force.drag().on("dragstart", function() { d3.event.sourceEvent.stopPropagation(); });
 
 var path;
 var node;
@@ -80,9 +108,9 @@ d3.csv(saveFile, function (myArraryOfObjects){
     
     //console.log(sortedUserNames) 
 
-    var selector = d3.select("body")
+    var selector = d3.select("#userSelector")
         .append("select")
-        .attr("id", "userSelector")
+        .attr("id", "Selector")
         .selectAll("option")
         .data(sortedUserNames)
         .enter().append("option")
@@ -91,10 +119,10 @@ d3.csv(saveFile, function (myArraryOfObjects){
             return i;
         });
 
-    d3.select("#userSelector")
+    d3.select("#Selector")
     .on("change", function(d) {
         let index = this.value;
-        //console.log(index)
+        console.log(index)
         updateNetwork(index);
     })
 
@@ -204,7 +232,7 @@ function generateNetworkGraph(nodeData,linkData){
         .start();
 
     // build the arrow.
-    svg.append("svg:defs").selectAll("marker")
+    svgSoical.append("svg:defs").selectAll("marker")
         .data(["end"])      // Different link/path types can be defined here
       .enter().append("svg:marker")    // This section adds in the arrows
         .attr("id", String)
@@ -218,7 +246,7 @@ function generateNetworkGraph(nodeData,linkData){
         .attr("d", "M0,-5L10,0L0,5");
 
     // add the links and the arrows
-    path = svg.append("svg:g").selectAll("path")
+    path = svgSoical.append("svg:g").selectAll("path")
         .data(force.links())
       .enter().append("svg:path")
     //    .attr("class", function(d) { return "link " + d.type; })
@@ -226,9 +254,10 @@ function generateNetworkGraph(nodeData,linkData){
         .attr("marker-end", "url(#end)");
 
     //define the nodes
-    node = svg.selectAll(".node")
+    node = svgSoical.selectAll(".node")
             //.data(networkData)
             .data(force.nodes())
+            .call(force.drag)
         .enter().append("g")
             .attr("class", "node")
             .on("mouseover", function(){tooltip.style("display",null);})
@@ -764,3 +793,31 @@ function scroll() {
         .call(brush.extent([ topSection, topSection + size ]))
         .call(brush.event);
 }
+
+//----------------------
+//--------Zoom Function
+//----------------------
+function zoomed() {
+    svgSoical.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+  }
+
+//--------------------
+//Drag Functions
+//--------------------
+function dragstarted(d) {
+    d3.event.sourceEvent.stopPropagation();
+  
+    d3.select(this).classed("dragging", true);
+    force.start();
+  }
+  
+  function dragged(d) {
+  
+    d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+  
+  }
+  
+  function dragended(d) {
+  
+    d3.select(this).classed("dragging", false);
+  }
