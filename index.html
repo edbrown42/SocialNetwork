@@ -7,19 +7,16 @@
 </head>
 <body>
 
-	<form id="RadioButtons">
-        <input type="radio" value ="Legit" name="choice"> Believes Legitimate</input>
-        <input type="radio" value ="notLegit" name="choice"> Believes Not Legitimate</input>
-        <input type="radio" value ="Both" name="choice" checked> Both </input>
-    </form>
-
-	<div id="SocialNetwork"></div>
-
-	<div class="outer-wrapper">
-		<div class="chart">
-			<div class="tool-tip">
-		</div>
+	<div id="SocialNetwork">
+		<div id="userSelector"></div>
+		<label class="RadioButtons">
+			<input type="radio" value ="Legit" name="choice"> Believes Legitimate</input>
+			<input type="radio" value ="notLegit" name="choice"> Believes Not Legitimate</input>
+			<input type="radio" value ="Both" name="choice" checked> Both </input>	
+		</label>
 	</div>
+
+	<div id="BarChart"></div>
 
 	<script src="http://d3js.org/d3.v3.min.js"></script>
 	<script src="script.js"></script>

@@ -1,9 +1,31 @@
-select {
+#SocialNetwork{
     position: absolute;
-    left: 425px;
+    display: inline;
+    left:750px;
     top: 10px;
+    background-color: rgb(228, 228, 228); 
 }
 
+#SocialNetwork > * {
+    position: relative;
+}
+
+#userSelector{
+    display: inline;
+    left: 0;
+}
+
+.RadioButtons{
+    display: inline-block;
+    vertical-align: top;
+}
+
+.svgWrapper{
+    position: absolute;
+    display: inline;
+    left:10px;
+    top: 30px;
+}
 
 path.link {
   fill: none;
