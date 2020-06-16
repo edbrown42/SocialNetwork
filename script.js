@@ -1,24 +1,32 @@
 //-------------------------------------
-//Variables  
-//https://blockbuilder.org/mjcoyle/3b8790bb45c628f4d4c599b68553372e
+//Variables        TODO: remove ones that are no longer needed
+//-------------------------------------
+var data = [], defs, brush,main_yZoom, textScale;
 
-var data = [], defs,gBrush, brush, main_xScale, mini_xScale, main_yScale,
-      mini_yScale,main_yZoom, main_xAxis, main_yAxis, mini_width, textScale;
-
+let legitColor = 'Green'; //color to represent Believes_legitimate: True
+let notLegitColor = 'Red'; //color to represent Believes_legitimate: False
 let networkData = [];
 let networkLinks = [];
 let networkDataFiltered = []; //updated nodes list based on drop down selection
 let networkLinksFiltered = []; //updated links list based on drop down selection
 let userNames = ["---ALL USERS---"];
 let sortedUserNames = [];
+
+//These correlate to the network graph
 let margin = {top:20, right: 120, bottom: 20, left: 120};
 let width = 1000 - margin.right - margin.left;
 let height = 750 - margin.top - margin.bottom;
+
+//These correlate to the bar chart
+let barMargin = {top: 40, right: 30, bottom: 35, left: 30};
+let barWidth = 850 - barMargin.left - barMargin.right;
+let barHeight = 500 - barMargin.top - barMargin.bottom;
 
 var zoom = d3.behavior.zoom()
     .scaleExtent([-5,10])
     .on("zoom", zoomed)
 
+//svg element for the network graph
 let svgSoical = d3.select("#SocialNetwork").append("svg")
     .attr("width", width + margin.right + margin.left)
     .attr("height", height + margin.top + margin.bottom)
@@ -41,11 +49,15 @@ let svgSoical = d3.select("#SocialNetwork").append("svg")
        // .append("g")
     //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-let svg= d3.select("#BarChart").append("svg")
-    .attr("width", width + margin.right + margin.left)
-    .attr("height", height + margin.top + margin.bottom)
+//svg element for the bar chart
+let svg = d3.select("#BarChart").append("svg")
+    .attr("width", barWidth + barMargin.left + barMargin.right)
+    .attr("height", barHeight + barMargin.top + barMargin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + barMargin.left + "," + barMargin.top + ")");
+  
     
-
+//force variable for network graph
 let force = d3.layout.force()
     //.gravity(0.1)
     //.distance(100)
@@ -60,13 +72,13 @@ var path;
 var node;
 var selection; //global variable for radio button selection
 
-var tooltip = d3.select("body").append("div").attr("class", "toolTip").style("display","none");
+let tooltip = d3.select("body").append("div").attr("class", "toolTip").style("display","none");
 
 tooltip.append("text").attr("x", 15).attr("dy", "1.2em").style(
         "text-anchor", "middle").attr("font-size", "12px").attr(
         "font-weight", "bold");
 
-let saveFile = 'fakenews.csv';
+let saveFile = 'fakenews.csv'; //file to read from
 //let saveFile = 'fakeNewsMINI.csv';
 
 //------------------------------------------------------------------------------------------
@@ -79,7 +91,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
     //Radio Buttons
     d3.selectAll("input[name='choice']").on("change", function(){
         selection = this.value;
-        console.log(selection) //debug line to test radio button functionality
+        //console.log(selection) //debug line to test radio button functionality
         d3.selectAll(".node").select('circle').transition()
             .style('fill', function(d,i){return getNetworkColor(d.legitCount,d.notLegitCount);})
             .attr("r", function(d,i){return getCircleSize(d.legitCount,d.notLegitCount);});
@@ -95,11 +107,10 @@ d3.csv(saveFile, function (myArraryOfObjects){
     //generate bar chart data
     let rawBarData = gatherBarChartData(myArraryOfObjects);
     console.log(rawBarData);
-    data = gatherData(rawBarData);
-    console.log(data)
+
 
     // create the drop down menu of users
-    var tempuserNames=userNames.slice(1);
+    let tempuserNames=userNames.slice(1);
     tempuserNames.sort();
     sortedUserNames.push(userNames[0]);
     tempuserNames.forEach(function(d){
@@ -108,7 +119,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
     
     //console.log(sortedUserNames) 
 
-    var selector = d3.select("#userSelector")
+    let selector = d3.select("#userSelector")
         .append("select")
         .attr("id", "Selector")
         .selectAll("option")
@@ -120,16 +131,14 @@ d3.csv(saveFile, function (myArraryOfObjects){
         });
 
     d3.select("#Selector")
-    .on("change", function(d) {
-        let index = this.value;
-        console.log(index)
-        updateNetwork(index);
-    })
-
+        .on("change", function(d) {
+            let index = this.value;
+            //console.log(index)
+            updateNetwork(index);
+        })
 
     generateNetworkGraph(networkData,networkLinks);
-    generateBarChart();
-
+    generateBarChart(rawBarData);
 
 });
 
@@ -272,22 +281,22 @@ function generateNetworkGraph(nodeData,linkData){
     //add the nodes
     node.append('circle')
         .attr('r', 5)
-       .attr('fill', function(d,i){return getNetworkColor(d.legitCount,d.notLegitCount);});
+        .attr('fill', function(d,i){return getNetworkColor(d.legitCount,d.notLegitCount);});
 
 
 } 
 
 //-------------------------------------------------------------------
-//This functino will determin the nodes color for network graph
+//This function will determine the node's color for network graph
 //-------------------------------------------------------------------
 function getNetworkColor(l,n){
     //console.log("Input: " + l + " Selction: " + selection); //debug line to test incoming data
     if (selection == "notLegit"){
-        return ((l > n) ? 'grey' : 'red');
+        return ((l > n) ? 'grey' : notLegitColor);
     }else if (selection == "Legit"){
-        return ((l > n) ? 'green' : 'grey');
+        return ((l > n) ? legitColor : 'grey');
     }else{
-        return ((l > n) ? 'green' : 'red');
+        return ((l > n) ? legitColor : notLegitColor);
     }
 }
 
@@ -453,328 +462,148 @@ function gatherBarChartData(inputData){
 }
 
 //-------------------------
-//Gather Data
-//-------------------------
-function gatherData(inputData){
-      let outputData = []
-      
-      for (var i = 0; i < inputData.length; i++){
-        let datum = {};
-        datum.key = i;
-        datum.country = inputData[i].date;
-        datum.gtLabel = "greater";
-        datum.value = inputData[i].legitimate;
-        datum.ltLabel = "Lesser";
-        datum.result =inputData[i].notLegitimate;
-        outputData.push(datum);
-      }
-
-      return outputData;
-}
-
-//-------------------------
 //Generate Bar Chart
 //-------------------------
-function generateBarChart() {
+function generateBarChart(rawData) {
+    let subgroups = ["legitimate","notLegitimate"];
 
-    // var zoomer = d3.behavior.zoom()
-    //     .on("zoom", null);
+    let datesProvided = d3.map(rawData,function(d){return d.date}).keys();
+    //console.log(datesProvided)
+    
+    //transpose the data into layers
+    let layers = d3.layout.stack()(subgroups.map(
+        function(tweet) {
+            return rawData.map(function(d) {
+                return {x: (d.date), y:+d[tweet]};
+            });
+        }));
+    //console.log(layers);
 
-    var main_margin = {top: 10, right: 10, bottom: 30, left: 200},
-        main_width = 700 - main_margin.left - main_margin.right,
-        main_height = 250 - main_margin.top - main_margin.bottom;
+    // Set x, y and colors
+    let x = d3.scale.ordinal()
+        .domain(layers[0].map(function(d) { return d.x; }))
+        .rangeRoundBands([10, barWidth-10], 0.02);
 
-    var mini_margin = {top: 10, right: 10, bottom: 30, left: 10},
-        mini_height = 250 - mini_margin.top - mini_margin.bottom;
-        mini_width = 100 - mini_margin.left - mini_margin.right;
+    let y = d3.scale.linear()
+        .domain([0, d3.max(layers, function(d) {  return d3.max(d, function(d) { return d.y0 + d.y; });  })])
+        .range([barHeight, 0]);
 
-    svg = d3.select("body").append("svg")
-        .attr("class", "svgWrapper")
-        .attr("width", main_width + main_margin.left + main_margin.right + mini_width + mini_margin.left + mini_margin.right)
-        .attr("height", main_height + main_margin.top + main_margin.bottom);
+    let colors = [legitColor, notLegitColor];
 
-        // .call(zoomer)
-        // .on("wheel.zoom", scroll)
-        // .on("mousedown.zoom", null)
-        // .on("touchstart.zoom", null)
-        // .on("touchmove.zoom", null)
-        // .on("touchend.zoom", null);
+    // Define and draw axes
+    let yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .ticks(5)
+        .tickSize(-barWidth, 0, 0)
+        .tickFormat( function(d) { return d } );
 
-    var mainGroup = svg.append("g")
-        .attr("class","mainGroupWrapper")
-        .attr("transform","translate(180,10)")
-        .append("g")
-        .attr("clip-path", "url(#clip)")
-        .style("clip-path", "url(#clip)")
-        .attr("class","mainGroup");
+    let xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom")
+        //.tickFormat(d3.time.format("%Y"));
 
-    var miniGroup = svg.append("g")
-        .attr("class","miniGroup")
-        .attr("transform","translate(135,10)");
-
-    var brushGroup = svg.append("g")
-        .attr("class","brushGroup")
-        .attr("transform","translate(135,10)");
-
-    main_xScale = d3.scale.linear().range([0, main_width]);
-    mini_xScale = d3.scale.linear().range([0, mini_width]);
-
-    main_yScale = d3.scale.ordinal().rangeBands([0, main_height], 0.4, 0);
-    mini_yScale = d3.scale.ordinal().rangeBands([0, mini_height], 0.4, 0);
-
-    main_yZoom = d3.scale.linear()
-        .range([0, main_height])
-        .domain([0, main_height]);
-
-    main_xAxis = d3.svg.axis()
-      .scale(main_xScale)
-      .orient("bottom")
-      .tickFormat(d3.format(".2s"));
-
-    d3.select(".mainGroupWrapper")
-        .append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(" + 0 + "," + (main_height + 5) + ")");
-
-    svg.append("text") 
-        .attr("transform", "translate(" + (main_width / 2) + " ," + (main_height + (main_margin.bottom -60) ) +")")
-        .attr("dy", ".71em")
-        .attr("class", "x axis")
-        .attr("stroke-width",1)
-        .style("font-size","15px")
-        .text("");
-
-    main_yAxis = d3.svg.axis()
-      .scale(main_yScale)
-      .orient("left").tickSize(5);
-
-    mainGroup.append("g")
+    svg.append("g")
         .attr("class", "y axis")
-        .attr("transform", "translate(-48,0)");
+        .call(yAxis);
 
-    main_xScale.domain([0, d3.max(data, function(d) { return d.value; })]);
-    mini_xScale.domain([0, d3.max(data, function(d) { return d.value; })]);
-    main_yScale.domain(data.map(function(d) { return d.country; }));
-    mini_yScale.domain(data.map(function(d) { return d.country; }));
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + barHeight + ")")
+        .call(xAxis);
 
-    d3.select(".mainGroup").select(".y.axis").call(main_yAxis);
+    // Create groups for each series, rects for each segment 
+    let groups = svg.selectAll("g.cost")
+        .data(layers)
+        .enter().append("g")
+        .attr("class", "cost")
+        .style("fill", function(d, i) { return colors[i]; });
 
-    textScale = d3.scale.linear()
-      .domain([25,50])
-      .range([12,6])
-      .clamp(true);
+    let rect = groups.selectAll("rect")
+        .data(function(d) { return d; })
+        .enter()
+        .append("rect")
+        .attr("x", function(d) { return x(d.x); })
+        .attr("y", function(d) { return y(d.y0 + d.y); })
+        .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); })
+        .attr("width", x.rangeBand())
+        .on("mouseover", function() { tooltip.style("display", null); })
+        .on("mouseout", function() { tooltip.style("display", "none"); })
+        .on("mousemove", function(d) {
+            let xPosition = d3.mouse(this)[0] - 15;
+            let yPosition = d3.mouse(this)[1] - 25;
+            tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+            tooltip.select("text").text(d.y); //might be able to get ride of this tooltip since brush is now on top of it
+        });
 
-    var brushExtent = 10;// Math.max( 1, Math.min( 20, Math.round(data.length*0.2)));
+    // Draw legend
+    let legend = svg.selectAll(".legend")
+        .data(colors)
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(-125," + (-19+(i * -19)) + ")"; });
+ 
+    legend.append("rect")
+        .attr("x", barWidth - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", function(d, i) {return colors.slice().reverse()[i];});
+ 
+    legend.append("text")
+        .attr("x", barWidth + 5)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "start")
+        .text(function(d, i) { 
+            switch (i) {
+            case 0: return "Believes_legitimate: False";
+            case 1: return "Believes_legitimate: True";
+            case 2: return "Neutral";
+            }
+        });
 
+    // Prep the tooltip bits, initial display is hidden
+    let tooltip = svg.append("g")
+        .attr("class", "tooltip")
+        .style("display", "none");
+  
+    tooltip.append("rect")
+        .attr("width", 30)
+        .attr("height", 20)
+        .attr("fill", "white")
+        .style("opacity", 0.5);
+
+    tooltip.append("text")
+        .attr("x", 15)
+        .attr("dy", "1.2em")
+        .style("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("font-weight", "bold");
+ 
+    // define brush control element and its events
     brush = d3.svg.brush()
-        .y(mini_yScale)
-        .extent([mini_yScale(data[0].country), mini_yScale(data[brushExtent].country)])
-        .on("brush", brushmove);
+        .x(x)
+        .on("brushstart", brushstart)
+        .on("brush", brushmove)
+        .on("brushend", brushend);
 
-    gBrush = d3.select(".brushGroup").append("g")
-      .attr("class", "brush")
-      .call(brush);
-    
-    gBrush.selectAll(".resize")
-      .append("line")
-      .attr("x2", 40);
+    // create svg group with class brush and call brush on it
+    let brushg = svg.append("g")
+        .attr("class", "brush")
+        .call(brush);
 
-    gBrush.selectAll("rect")
-      .attr("width", 40);
+    // set brush extent to rect and define objects height
+    brushg.selectAll("rect")
+        .attr("height", barHeight);
 
-    gBrush.select(".background")
-      .on("mousedown.brush", brushcenter)
-      .on("touchstart.brush", brushcenter);
-
-    defs = svg.append("defs")
-
-    defs.append("clipPath")
-      .attr("id", "clip")
-      .append("rect")
-      .attr("x", -main_margin.left)
-      .attr("width", main_width + main_margin.left)
-      .attr("height", main_height);
-
-
-    var mini_bar = d3.select(".miniGroup").selectAll(".bar")
-      .data(data, function(d) { return d.key; });
-
-    mini_bar
-      .attr("width", function(d) { return (mini_xScale(d.value)/2.2); })
-      .attr("y", function(d,i) { return mini_yScale(d.country); })
-      .attr("height", mini_yScale.rangeBand());
-
-    mini_bar.enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", 0)
-      .attr("width", function(d) { return mini_xScale(d.value/2.2); })
-      .attr("y", function(d,i) { return mini_yScale(d.country); })
-      .attr("height", mini_yScale.rangeBand())
-      .style("fill", "url(#gradient-rainbow-mini)");
-
-    mini_bar.exit()
-      .remove();
-
-    gBrush.call(brush.event);
-    
 }
 
-
-function update() {
-
-    // var divTooltip = svg.append("div").attr("class", "toolTip");
-
-    if (d3.select(".mainGroup").select(".bar2.greater").empty()) {
-        var bar = d3.select(".mainGroup").selectAll(null)
-          .data(data, function(d) { return d.key; });
-        bar.enter().append("rect")
-           .attr("class", "bar2 greater")
-           //.attr("fill", "#1f77b4")
-           .attr("fill","green")
-           .attr("x", 0);
-
-        bar.enter().append("rect")
-           .attr("class", "bar2 lesser")
-           //.attr("fill", "#ff7f0e")
-           .attr("fill","red")
-           .attr("x", 0);
-    }
-
-    d3.selectAll(".bar2.greater")
-      .attr("y", function(d) { return main_yScale(d.country) + main_yScale.rangeBand()/2; })
-      .attr("width", function(d) { return main_xScale(d.value); })
-                .on("mouseover", function(){tooltip.style("display",null);})
-                .on("mouseout", function() {tooltip.style("display", "none");})
-                .on("mousemove",function(d) {
-                    tooltip.style("left", d3.event.pageX+10+"px");
-                    tooltip.style("top", d3.event.pageY-25+"px");
-                    tooltip.style("display", "inline-block");
-                    tooltip.select("text").html(d.country + '<br />' + "Legitimate: "+d.value+'<br />'+"Not legitimate: " + d.result);})
-                    //tooltip.select("text").html("test");})
-      .attr("height", main_yScale.rangeBand()/2);
-
-    d3.selectAll(".bar2.lesser")
-      .attr("y", function(d,i) { return main_yScale(d.country); })
-      .attr("width", function(d) { return main_xScale(d.result); })
-                .on("mouseover", function(){tooltip.style("display",null);})
-                .on("mouseout", function() {tooltip.style("display", "none");})
-                .on("mousemove",function(d) {
-                    tooltip.style("left", d3.event.pageX+10+"px");
-                    tooltip.style("top", d3.event.pageY-25+"px");
-                    tooltip.style("display", "inline-block");
-                    tooltip.select("text").html(d.country + '<br />' + "Legitimate: "+d.value+'<br />'+"Not legitimate: " + d.result);})
-                    //tooltip.select("text").html("test");})
-      .attr("height", main_yScale.rangeBand()/2);
-
-
-    // bar
-    //   .attr("y", function(d,i) { return main_yScale(d.country); })
-    //   .attr("height", main_yScale.rangeBand())
-    //   .attr("x", 0)
-    //   .transition().duration(50)
-    //   .attr("width", function(d) { return main_xScale(d.value); });
-
-    // var bar1= bar.enter().append("rect")
-    //   .attr("class", "bar2")
-    // //   .attr("id","greater")
-    // //   .style("fill", "#1f77b4")
-    // //   .attr("fill", function(d,i) { return "#000" })
-    //   .attr("fill", "#1f77b4")
-    //   .attr("y", function(d,i) { return main_yScale(d.country) + main_yScale.rangeBand()/2; })
-    //   .attr("height", main_yScale.rangeBand()/2)
-    //   .attr("x", 0)
-    //   .transition().duration(50)
-    //   .attr("width", function(d) { return main_xScale(d.value); });
-
-    // // console.log(bar1);
-    // var bar2 = bar.enter().append("rect")
-    //   .attr("class", "bar2")
-    // //   .attr("id","lesser")
-    // //   .style("fill", "#ff7f0e")
-    //   .attr("fill", "#ff7f0e")
-    //   .attr("y", function(d,i) { return main_yScale(d.country); })
-    //   .attr("height", main_yScale.rangeBand()/2)
-    //   .attr("x", 0)
-    //   .transition().duration(50)
-    //   .attr("width", function(d) { return main_xScale(d.result); });
-
-    // console.log(bar2);
-
-    // var dwellTimeSecsEntered = $("#dwellTimeSecs").val();
-
-    // var lessValue = "value";
-    // var greaterValues = "result";
-    // var tip = d3.tip()
-    //   .attr('class', 'd3-tip')
-    //   .offset([10, 75])
-    //   .html(function(d) {
-    //     return "<strong>"+d.country+ " </strong><br>" +
-    //       ""+lessValue+" :<span style='color:black'>" + d.result + "</span><br>"+greaterValues+": <span style='color:black'>" + d.value + "</span><br>";
-    //     });
-
-    // bar.on('mouseover', tip.show)
-    //    .on('mouseout', tip.hide);
-
-    // svg.call(tip);
-
-    // bar.exit()
-    //    .remove();
-}
-
-function brushmove() {
-
-    var extent = brush.extent();
-
-    var selected = mini_yScale.domain()
-      .filter(function(d) { return (extent[0] - mini_yScale.rangeBand() + 1e-2 <= mini_yScale(d)) && (mini_yScale(d) <= extent[1] - 1e-2); }); 
-
-    d3.select(".miniGroup").selectAll(".bar")
-      .style("fill", "lightGrey");
-
-    d3.selectAll(".y.axis text")
-      .style("font-size", textScale(selected.length));
-    var originalRange = main_yZoom.range();
-    main_yZoom.domain( extent );
-
-    main_yScale.domain(data.map(function(d) { return d.country; }));
-    main_yScale.rangeBands( [ main_yZoom(originalRange[0]), main_yZoom(originalRange[1]) ], 0.4, 0);
-
-    d3.select(".mainGroup")
-      .select(".y.axis")
-      .call(main_yAxis);
-
-    // keep x-axis at the same scale independet of selected brush range
-    // var newMaxXScale = d3.max(data, function(d) { return selected.indexOf(d.country) > -1 ? d.value : 0; });
-    // main_xScale.domain([0, newMaxXScale]);
-
-    // can be moved to the init() call
-    d3.select(".mainGroupWrapper")
-      .select(".x.axis")
-      .transition().duration(50)
-      .call(main_xAxis);
-
-    update();
-}
-
-function brushcenter() {
-    var target = d3.event.target,
-        extent = brush.extent(),
-        size = extent[1] - extent[0],
-        range = mini_yScale.range(),
-        y0 = d3.min(range) + size / 2,
-        y1 = d3.max(range) + mini_yScale.rangeBand() - size / 2,
-        center = Math.max( y0, Math.min( y1, d3.mouse(target)[1] ) );
-
-    d3.event.stopPropagation();
-
-    gBrush
-        .call(brush.extent([center - size / 2, center + size / 2]))
-        .call(brush.event);
-}
-
+//----------------------
+//--------Scroll Function
+//----------------------
 function scroll() {
 
-    var extent = brush.extent(),
+    let extent = brush.extent(),
       size = extent[1] - extent[0],
       range = mini_yScale.range(),
       y0 = d3.min(range),
@@ -799,7 +628,7 @@ function scroll() {
 //----------------------
 function zoomed() {
     svgSoical.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-  }
+}
 
 //--------------------
 //Drag Functions
@@ -809,15 +638,30 @@ function dragstarted(d) {
   
     d3.select(this).classed("dragging", true);
     force.start();
-  }
+}
   
-  function dragged(d) {
-  
+function dragged(d) {
     d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+}
   
-  }
-  
-  function dragended(d) {
-  
+function dragended(d) {
     d3.select(this).classed("dragging", false);
-  }
+}
+
+
+//-------------------------
+//Brush Functions
+//-------------------------
+function brushstart() {
+    // console.log('brushstart event is triggered');
+}
+  
+function brushmove() {
+    // console.log('the brush event is currently triggered');
+}
+  
+function brushend() {
+    // console.log('NOTE: brushend event is triggered');
+    // console.log('Is the brush empty: ' + brush.empty());
+    console.log('Extent of brush: ' +  brush.extent() );
+}

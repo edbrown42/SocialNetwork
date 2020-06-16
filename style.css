@@ -1,9 +1,9 @@
 #SocialNetwork{
     position: absolute;
     display: inline;
-    left:750px;
+    left:800px;
     top: 10px;
-    background-color: rgb(228, 228, 228); 
+    /*background-color: rgb(228, 228, 228); */
 }
 
 #SocialNetwork > * {
@@ -20,12 +20,16 @@
     vertical-align: top;
 }
 
-.svgWrapper{
+#BarChart{
     position: absolute;
     display: inline;
     left:10px;
     top: 30px;
+    font: 10px sans-serif;
+    shape-rendering: crispEdges;
+    /*background-color: yellow;*/
 }
+
 
 path.link {
   fill: none;
@@ -66,6 +70,15 @@ text {
     stroke: #000;
     shape-rendering: crispEdges;
 }
+
+path.domain {
+    stroke: none;
+}
+ 
+.y .tick line {
+    stroke: #ddd;
+}
+
 .x.axis path {
     display: block;
 }
@@ -91,10 +104,11 @@ body {
     font-weight: 300;
 }
 
-.brush .extent {
-    fill-opacity: .125;
+.brush {
+    fill: lightgray;
+    fill-opacity: .75;
     shape-rendering: crispEdges;
-}
+  }
 .resize {
     display: inline !important; /* show when empty */
     fill: #7A7A7A;
@@ -102,68 +116,3 @@ body {
     stroke: #7A7A7A;
     stroke-width: 2px;
 }
-/*
-.BarChart{
-  width: 960px;
-}
-
-/* SVG axes
-----------------------------------
-.axis path, .axis line {
-	fill: none;
-	stroke: #666;
-	shape-rendering: crispEdges;
-}
-
-.axis text {
-	font-family: sans-serif;
-	fill: #666;
-	font-size: 13px;
-	shape-rendering: crispEdges;
-}
-
-body {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        width: 960px;
-        height: 500px;
-        position: relative;
-    }
-    text{
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    }
-    .toolTip {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        position: absolute;
-        width: auto;
-        height: auto;
-        background: none repeat scroll 0 0 white;
-        border: 0 none;
-        border-radius: 8px 8px 8px 8px;
-        box-shadow: -3px 3px 15px #888888;
-        color: black;
-        font: 12px sans-serif;
-        padding: 5px;
-        text-align: center;
-    }
-    .legend {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        font-size: 60%;
-    }
-    text {
-        font: 10px sans-serif;
-    }
-    .axis text {
-        font: 10px sans-serif;
-    }*
-    /*.axis path{
-        fill: none;
-        stroke: #000;
-    }
-    .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
-    }
-    .x.axis path {
-        display: none;
-    }*/
