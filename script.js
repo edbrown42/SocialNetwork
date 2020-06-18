@@ -1,8 +1,10 @@
 //-------------------------------------
 //Variables        TODO: remove ones that are no longer needed
 //-------------------------------------
-var data = [], defs, brush,main_yZoom, textScale;
+let data = [], datesProvided = [], revisedDates = [];
+var defs, brush,main_yZoom, textScale, x, selector;
 
+let originalData = []; //data read from CSV file will be saved here
 let legitColor = 'Green'; //color to represent Believes_legitimate: True
 let notLegitColor = 'Red'; //color to represent Believes_legitimate: False
 let networkData = [];
@@ -21,6 +23,7 @@ let height = 750 - margin.top - margin.bottom;
 let barMargin = {top: 40, right: 30, bottom: 35, left: 30};
 let barWidth = 850 - barMargin.left - barMargin.right;
 let barHeight = 500 - barMargin.top - barMargin.bottom;
+let barWidthPadding = 10;
 
 var zoom = d3.behavior.zoom()
     .scaleExtent([-5,10])
@@ -87,7 +90,8 @@ let saveFile = 'fakenews.csv'; //file to read from
 
 //read in data from csv and populate data array
 d3.csv(saveFile, function (myArraryOfObjects){
-
+    originalData = myArraryOfObjects;
+    console.log(originalData);
     //Radio Buttons
     d3.selectAll("input[name='choice']").on("change", function(){
         selection = this.value;
@@ -97,16 +101,15 @@ d3.csv(saveFile, function (myArraryOfObjects){
             .attr("r", function(d,i){return getCircleSize(d.legitCount,d.notLegitCount);});
     });
 
-
-
-    renderNetworkData(myArraryOfObjects);
-    //console.log(networkData); // debug line to anaylize structure of networkData array
+    //renderNetworkData(myArraryOfObjects);
+    renderNetworkData(originalData, -1, -1);
+    console.log(networkData); // debug line to anaylize structure of networkData array
     //console.log(networkLinks); //debug line to show network links
     //console.log(userNames);
 
     //generate bar chart data
     let rawBarData = gatherBarChartData(myArraryOfObjects);
-    console.log(rawBarData);
+    //console.log(rawBarData);
 
 
     // create the drop down menu of users
@@ -119,7 +122,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
     
     //console.log(sortedUserNames) 
 
-    let selector = d3.select("#userSelector")
+    selector = d3.select("#userSelector")
         .append("select")
         .attr("id", "Selector")
         .selectAll("option")
@@ -146,8 +149,10 @@ d3.csv(saveFile, function (myArraryOfObjects){
 //-------------------------------------------------------------------
 //this function will get data into acceptable format for social graph
 //-------------------------------------------------------------------
-function renderNetworkData(myInputData){
+function renderNetworkData(myInputData, lowD, highD){
     //console.log(myInputData); //debug line - making sure input data has been recieved into function
+    networkData = []; //ensure network data is blank
+    networkLinks = []; //ensure network link is blank
 
     myInputData.forEach(function (d){
         let datum = {}; //blank object to parse data from each line into
@@ -163,6 +168,7 @@ function renderNetworkData(myInputData){
         tweetDatum.tweetID = d.tweet_id;
         tweetDatum.retweet =  d.retweet_from;
         tweetDatum.date = d.post_date;
+        let tempDate = d.post_date.slice(1,11); //temp date will be used to compare to the 
         tweetDatum.believed = d.believes_legitimate;
         //update legit/notLegit count
         if (tweetDatum.believed == " True "){
@@ -171,61 +177,62 @@ function renderNetworkData(myInputData){
             datum.notLegitCount++;
         }
 
-
-        //populate networkData array
-        if(networkData.length == 0){
-            //if data is empty (IE this is the first entry) add first element
-            datum.tweets.push(tweetDatum);
-            let newLength = networkData.push(datum);
-            userNames.push(datum.userName);
-        } else {
-            //search existing data to see if user has been entered yet
-            let found = 0; //flag to see if user already exist
-            for(var i=0;i<networkData.length;i++){
-                if (networkData[i].userID == datum.userID){
-                    //if user already exist
-                    found =1; //toggle flag
-                    let newLength = networkData[i].tweets.push(tweetDatum) //push tweet data to the user
-                            //update legit/notLegit count
-                    if (tweetDatum.believed == " True "){
-                        networkData[i].legitCount++;
-                    }else{
-                        networkData[i].notLegitCount++;
-                    }
-                    break;
-                }
-            }
-            //if not an existing user push data
-            if (found == 0){
+        //-1 is the default values for all data
+        if (((lowD == -1) && (highD == -1)) || ((tempDate >= lowD) && (tempDate <= highD))){
+            //populate networkData array
+            if(networkData.length == 0){
+                //if data is empty (IE this is the first entry) add first element
                 datum.tweets.push(tweetDatum);
-                let newLength = networkData.push(datum); 
+                let newLength = networkData.push(datum);
                 userNames.push(datum.userName);
+            } else {
+                //search existing data to see if user has been entered yet
+                let found = 0; //flag to see if user already exist
+                for(var i=0;i<networkData.length;i++){
+                    if (networkData[i].userID == datum.userID){
+                        //if user already exist
+                        found =1; //toggle flag
+                        let newLength = networkData[i].tweets.push(tweetDatum) //push tweet data to the user
+                                //update legit/notLegit count
+                        if (tweetDatum.believed == " True "){
+                            networkData[i].legitCount++;
+                        }else{
+                            networkData[i].notLegitCount++;
+                        }
+                        break;
+                    }
+                }
+                //if not an existing user push data
+                if (found == 0){
+                    datum.tweets.push(tweetDatum);
+                    let newLength = networkData.push(datum); 
+                    userNames.push(datum.userName);
+                }
+            }
+
+            //if the data is retweeted create a link
+            if (tweetDatum.retweet != " None "){
+                let linkDatum = {}; //create a new object to store the link data
+                linkDatum.source = null;
+                linkDatum.target = null;
+
+                //loop thru and find index of original tweet and retweet
+                for(var i = 0; i<networkData.length; i++){
+                    if (networkData[i].userID == tweetDatum.retweet){
+                        linkDatum.source = i; //position of original tweet
+                    }
+                    if (networkData[i].userID == datum.userID){
+                        linkDatum.target = i; //position of the retweet
+                    }
+                }
+
+                //add link to array
+                if ((linkDatum.source != null) && (linkDatum.target != null)){
+                    let newLinkLength = networkLinks.push(linkDatum);
+                }
             }
         }
 
-        
-
-        //if the data is retweeted create a link
-        if (tweetDatum.retweet != " None "){
-            let linkDatum = {}; //create a new object to store the link data
-            linkDatum.source = null;
-            linkDatum.target = null;
-
-            //loop thru and find index of original tweet and retweet
-            for(var i = 0; i<networkData.length; i++){
-                if (networkData[i].userID == tweetDatum.retweet){
-                    linkDatum.source = i; //position of original tweet
-                }
-                if (networkData[i].userID == datum.userID){
-                    linkDatum.target = i; //position of the retweet
-                }
-            }
-
-            //add link to array
-            if ((linkDatum.source != null) && (linkDatum.target != null)){
-                let newLinkLength = networkLinks.push(linkDatum);
-            }
-        }
     })
 }
 
@@ -467,7 +474,7 @@ function gatherBarChartData(inputData){
 function generateBarChart(rawData) {
     let subgroups = ["legitimate","notLegitimate"];
 
-    let datesProvided = d3.map(rawData,function(d){return d.date}).keys();
+    datesProvided = d3.map(rawData,function(d){return d.date}).keys();
     //console.log(datesProvided)
     
     //transpose the data into layers
@@ -480,9 +487,9 @@ function generateBarChart(rawData) {
     //console.log(layers);
 
     // Set x, y and colors
-    let x = d3.scale.ordinal()
+    x = d3.scale.ordinal()
         .domain(layers[0].map(function(d) { return d.x; }))
-        .rangeRoundBands([10, barWidth-10], 0.02);
+        .rangeRoundBands([0, barWidth-barWidthPadding],0.05); //.rangeBands(interval[, padding[, outerPadding]])
 
     let y = d3.scale.linear()
         .domain([0, d3.max(layers, function(d) {  return d3.max(d, function(d) { return d.y0 + d.y; });  })])
@@ -662,6 +669,71 @@ function brushmove() {
   
 function brushend() {
     // console.log('NOTE: brushend event is triggered');
-    // console.log('Is the brush empty: ' + brush.empty());
-    console.log('Extent of brush: ' +  brush.extent() );
+    /*console.log('Is the brush empty: ' + brush.empty());
+    let brushExtent = brush.extent();
+    console.log('Extent of brush: ' +  brushExtent[0] +" & " + brushExtent[1]);
+    console.log(x.rangeBand())
+    console.log(x.range())*/
+    updateDates();
+}
+
+//---------------------------
+//Update date range based on brush
+//---------------------------
+function updateDates(){
+    if (brush.empty()){
+        revisedDates = datesProvided; //if brush is empty set the new dates to the original dates
+    } else {
+        let brushExtent = brush.extent(); //store brush positions
+        let LOWresult = search4key(+brushExtent[0]);
+        let HIGHresult = search4key(+brushExtent[1]);
+       // console.log("Date index: " + LOWresult + " to " + HIGHresult);
+        revisedDates = newDates(LOWresult, HIGHresult);
+    }
+    console.log(revisedDates);
+    //renderNetworkData(myArraryOfObjects);
+    renderNetworkData(originalData, revisedDates[0], revisedDates[revisedDates.length-1]);
+    //console.log(networkData); // debug line to anaylize structure of networkData array
+    //clear graph
+    d3.selectAll(".node").remove();
+    d3.selectAll("path").remove();
+    //redraw graph
+    generateNetworkGraph(networkData,networkLinks);
+}
+
+//-----------------------------
+//Search thru range loop and find the matched position
+//-----------------------------
+function search4key(input){
+    //console.log(input);
+    //console.log(x.range());
+    let tempRange = [];
+    var key = 0;
+
+    x.range().forEach(function(d){
+        //console.log(d)
+        tempRange[tempRange.length]=+d;
+    })
+    //console.log(tempRange)
+    for(var i=0; i<tempRange.length; i++){
+        if (input > tempRange[i]){
+            key = i;
+        }else{
+            break
+        }
+    }
+    return key;
+}
+
+//-----------------------------
+//Function to make the array of selected dates
+//-----------------------------
+function newDates(low, high){
+    let tempArray = [];
+    for(var i=0; i<datesProvided.length; i++){
+        if ((i>=low) && (i<=high)){
+            tempArray.push(datesProvided[i]);
+        }
+    }
+    return tempArray;
 }
