@@ -1,3 +1,4 @@
+
 //-------------------------------------
 //Variables        TODO: remove ones that are no longer needed
 //-------------------------------------
@@ -84,6 +85,20 @@ tooltip.append("text").attr("x", 15).attr("dy", "1.2em").style(
 let saveFile = 'fakenews.csv'; //file to read from
 //let saveFile = 'fakeNewsMINI.csv';
 
+
+const map = new ol.Map({
+    target: 'map',
+    layers: [
+      new ol.layer.Tile({
+        source: new ol.source.OSM()
+      }),
+    ],
+    view: new ol.View({
+      center: ol.proj.fromLonLat([-90.82,40.2]),
+      zoom: 4
+    })
+  });
+
 //------------------------------------------------------------------------------------------
 //-----------------------------MAIN PROGRAM-------------------------------------------------
 //------------------------------------------------------------------------------------------
@@ -143,6 +158,8 @@ d3.csv(saveFile, function (myArraryOfObjects){
     generateNetworkGraph(networkData,networkLinks);
     generateBarChart(rawBarData);
     makeTable(originalData);
+    
+
 
 });
 
@@ -851,4 +868,11 @@ function search4row(input){
     }
 
     return key;
+}
+
+//-----------------------------
+//Initialize Map
+//-----------------------------
+function init(){
+
 }

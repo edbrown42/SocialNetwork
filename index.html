@@ -6,7 +6,8 @@
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/slick.grid.css" type="text/css"/>
   	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/css/smoothness/jquery-ui-1.11.3.custom.css" type="text/css"/>
-  	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/examples/examples.css" type="text/css"/>
+	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/examples/examples.css" type="text/css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css">
 </head>
 <body>
 	<table>
@@ -28,7 +29,7 @@
 		</tr>
 		<tr>
 			<td><div id="BarChart"></div></td>
-			<td>Place Holder for Map (Next TODO)</td>
+			<td><div id="map"></div></td>
 		</tr>
 	</table>
 
@@ -45,5 +46,8 @@
 	<script src="https://6pac.github.io/SlickGrid//slick.editors.js"></script>
 	<script src="https://6pac.github.io/SlickGrid/slick.grid.js"></script>
 
-	<script src="script.js"></script>
+	<!-- Open Layers Map -->
+	<script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+
+	<script src="./script.js"></script>
 </body>
