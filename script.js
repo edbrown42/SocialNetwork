@@ -1,8 +1,8 @@
 //-------------------------------------
 //Variables        TODO: remove ones that are no longer needed
 //-------------------------------------
-let data = [], datesProvided = [], revisedDates = [];
-var defs, brush,main_yZoom, textScale, x, selector;
+let data = [], datesProvided = [], revisedDates = []; tableData = [];
+var defs, brush,main_yZoom, textScale, x, selector, grid;
 
 let originalData = []; //data read from CSV file will be saved here
 let legitColor = 'Green'; //color to represent Believes_legitimate: True
@@ -17,12 +17,12 @@ let sortedUserNames = [];
 //These correlate to the network graph
 let margin = {top:20, right: 120, bottom: 20, left: 120};
 let width = 1000 - margin.right - margin.left;
-let height = 750 - margin.top - margin.bottom;
+let height = 535 - margin.top - margin.bottom;
 
 //These correlate to the bar chart
 let barMargin = {top: 40, right: 30, bottom: 35, left: 30};
 let barWidth = 850 - barMargin.left - barMargin.right;
-let barHeight = 500 - barMargin.top - barMargin.bottom;
+let barHeight = 425 - barMargin.top - barMargin.bottom;
 let barWidthPadding = 10;
 
 var zoom = d3.behavior.zoom()
@@ -142,6 +142,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
 
     generateNetworkGraph(networkData,networkLinks);
     generateBarChart(rawBarData);
+    makeTable(originalData);
 
 });
 
@@ -276,6 +277,14 @@ function generateNetworkGraph(nodeData,linkData){
             .call(force.drag)
         .enter().append("g")
             .attr("class", "node")
+            .on("click",function(d){
+                let row = search4row(d.userName);
+                grid.scrollRowIntoView(row);
+                console.log(row);
+                grid.getColumns().forEach(function(col){
+                    grid.flashCell(row, grid.getColumnIndex(col.id),100);
+                })
+            })
             .on("mouseover", function(){tooltip.style("display",null);})
             .on("mouseout", function() {tooltip.style("display", "none");})
             .on("mousemove",function(d) {
@@ -699,6 +708,13 @@ function updateDates(){
     d3.selectAll("path").remove();
     //redraw graph
     generateNetworkGraph(networkData,networkLinks);
+    tableData = [];
+    grid.setData(tableData);
+    grid.render();
+    tableData = renderTableData(originalData, revisedDates[0], revisedDates[revisedDates.length-1])
+    console.log(tableData);
+    grid.setData(tableData);
+    grid.render();
 }
 
 //-----------------------------
@@ -736,4 +752,103 @@ function newDates(low, high){
         }
     }
     return tempArray;
+}
+
+//-----------------------------
+//Function to make the table
+//-----------------------------
+function makeTable(inData){
+    //var grid;
+    tableData = [];
+
+    var columns = [
+        {id: "user_name", name: "User Name", field: "user_name", sortable: true},
+        {id: "user_location", name: "User Location", field: "user_location", sortable: true},
+        {id: "post_date", name: "Post Date", field: "post_date", sortable: true},
+        {id: "user_bio", name: "User Bio", field: "user_bio", sortable: true, width: 150},
+        {id: "believes_legitimate", name: "Believes Legitimate", field: "believes_legitimate", sortable: true, width: 110},
+        {id: "tweet_text_body", name: "Tweet Text", field: "tweet_text_body", sortable: true, width: 1000, headerCssClass: 'tweets', cssClass: 'left-align'}
+    ];
+
+    var options = {
+        enableCellNavigation: true,
+        enableColumnReorder: false,
+        cellFlashingCssClass: "current-user",
+        multiColumnSort: true
+    };
+
+    inData.forEach(function(d){
+        let datum = {};
+        datum.user_name = d.user_name;
+        datum.user_location = d.user_location;
+        datum.post_date = d.post_date;
+        datum.user_bio = d.user_bio;
+        datum.believes_legitimate = d.believes_legitimate;
+        datum.tweet_text_body = d.tweet_text_body;
+        tableData.push(datum);
+    })
+
+    grid = new Slick.Grid("#myGrid", tableData, columns, options);
+    
+    grid.onSort.subscribe(function (e, args) {
+        var cols = args.sortCols;
+  
+        tableData.sort(function (dataRow1, dataRow2) {
+          for (var i = 0, l = cols.length; i < l; i++) {
+            var field = cols[i].sortCol.field;
+            var sign = cols[i].sortAsc ? 1 : -1;
+            var value1 = dataRow1[field], value2 = dataRow2[field];
+            var result = (value1 == value2 ? 0 : (value1 > value2 ? 1 : -1)) * sign;
+            if (result != 0) {
+              return result;
+            }
+          }
+          return 0;
+        });
+        grid.invalidate();
+        grid.render();
+      });
+}
+
+//-----------------------------
+//Render new data for table based on date ranges
+//-----------------------------
+function renderTableData(myInputData, lowD, highD){
+   let outputTableData = [];
+
+    myInputData.forEach(function (d){
+        let datum = {}; //blank object to parse data from each line into
+        datum.post_date = d.post_date.slice(1,11);;
+
+        //-1 is the default values for all data
+        if (((lowD == -1) && (highD == -1)) || ((datum.post_date >= lowD) && (datum.post_date <= highD))){
+            //populate networkData array
+            datum.user_name = d.user_name;
+            datum.user_location = d.user_location;
+            datum.user_bio = d.user_bio;
+            datum.believes_legitimate = d.believes_legitimate;
+            datum.tweet_text_body = d.tweet_text_body;
+            outputTableData.push(datum);
+        }
+    })
+
+    return outputTableData;
+}
+
+//-----------------------------
+//Search thru range loop and find the matched position
+//-----------------------------
+function search4row(input){
+    //console.log(input + " " + typeof input)
+    //console.log(tableData)
+    var key = 0;
+
+    for(key = 0; key < grid.getDataLength(); key++){
+        if(((grid.getDataItem(key).user_name).localeCompare(input))== 0){
+            console.log("Found it. Key = " + key)
+            break;
+        }
+    }
+
+    return key;
 }

@@ -1,7 +1,7 @@
 #SocialNetwork{
-    position: absolute;
+    /*position: absolute;
     display: inline;
-    left:800px;
+    /*left:800px;
     top: 10px;
     /*background-color: rgb(228, 228, 228); */
 }
@@ -20,15 +20,12 @@
     vertical-align: top;
 }
 
-#BarChart{
+/*#BarChart{
     position: absolute;
     display: inline;
-    left:10px;
-    top: 30px;
     font: 10px sans-serif;
     shape-rendering: crispEdges;
-    /*background-color: yellow;*/
-}
+}*/
 
 
 path.link {
@@ -115,4 +112,18 @@ body {
     fill-opacity: 1;
     stroke: #7A7A7A;
     stroke-width: 2px;
+}
+
+/*CSS for highlighting spreadsheet*/
+.current-user {
+    border: 1px solid black;
+    background: orange;
+}
+
+.slick-header-column.tweets {
+    text-align: left;
+}
+
+.left-align{
+    text-align: left;
 }

@@ -4,20 +4,46 @@
 	<meta charset="UTF-8">
 	<title>Social Network</title>
 	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/slick.grid.css" type="text/css"/>
+  	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/css/smoothness/jquery-ui-1.11.3.custom.css" type="text/css"/>
+  	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/examples/examples.css" type="text/css"/>
 </head>
 <body>
-
-	<div id="SocialNetwork">
-		<div id="userSelector"></div>
-		<label class="RadioButtons">
-			<input type="radio" value ="Legit" name="choice"> Believes Legitimate</input>
-			<input type="radio" value ="notLegit" name="choice"> Believes Not Legitimate</input>
-			<input type="radio" value ="Both" name="choice" checked> Both </input>	
-		</label>
-	</div>
-
-	<div id="BarChart"></div>
+	<table>
+		<tr>
+			<td>
+				Table of input Data
+				<div id="myGrid" style="width:850px;height:550px;"></div>
+		  	</td>
+		  	<td>
+				<div id="SocialNetwork" style="width:1000px;height:550px;">
+					<div id="userSelector"></div>
+					<label class="RadioButtons">
+						<input type="radio" value ="Legit" name="choice"> Believes Legitimate</input>
+						<input type="radio" value ="notLegit" name="choice"> Believes Not Legitimate</input>
+						<input type="radio" value ="Both" name="choice" checked> Both </input>	
+					</label>
+				</div>
+		  	</td>	
+		</tr>
+		<tr>
+			<td><div id="BarChart"></div></td>
+			<td>Place Holder for Map (Next TODO)</td>
+		</tr>
+	</table>
 
 	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="https://6pac.github.io/SlickGrid/lib/firebugx.js"></script>
+	<script src="https://6pac.github.io/SlickGrid/lib/jquery-1.11.2.min.js"></script>
+	<script src="https://6pac.github.io/SlickGrid/lib/jquery.event.drag-2.2.js"></script>
+	<script src="https://6pac.github.io/SlickGrid/slick.core.js"></script>
+	<script src="https://6pac.github.io/SlickGrid//plugins/slick.cellrangeselector.js"></script>
+	<script src="https://6pac.github.io/SlickGrid//plugins/slick.cellselectionmodel.js"></script>
+	<script src="https://6pac.github.io/SlickGrid//plugins/slick.rowselectionmodel.js"></script>
+	<script src="https://6pac.github.io/SlickGrid//plugins/slick.rowmovemanager.js"></script>
+	<script src="https://6pac.github.io/SlickGrid//slick.formatters.js"></script>
+	<script src="https://6pac.github.io/SlickGrid//slick.editors.js"></script>
+	<script src="https://6pac.github.io/SlickGrid/slick.grid.js"></script>
+
 	<script src="script.js"></script>
 </body>
