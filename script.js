@@ -3,7 +3,7 @@
 //Variables        TODO: remove ones that are no longer needed
 //-------------------------------------
 let data = [], datesProvided = [], revisedDates = []; tableData = [];
-var defs, brush,main_yZoom, textScale, x, selector, grid;
+var defs, brush,main_yZoom, textScale, x, selector, grid, map, vectorLayer;
 
 let originalData = []; //data read from CSV file will be saved here
 let legitColor = 'Green'; //color to represent Believes_legitimate: True
@@ -14,6 +14,17 @@ let networkDataFiltered = []; //updated nodes list based on drop down selection
 let networkLinksFiltered = []; //updated links list based on drop down selection
 let userNames = ["---ALL USERS---"];
 let sortedUserNames = [];
+
+//adding text to marker
+/*var style = new ol.style.Style({
+    text: new ol.style.Text({
+      font: 'bold 11px "Open Sans", "Arial Unicode MS", "sans-serif"',
+      placement: 'line',
+      fill: new ol.style.Fill({
+        color: 'white'
+      })
+    })
+  });*/
 
 //These correlate to the network graph
 let margin = {top:20, right: 120, bottom: 20, left: 120};
@@ -82,31 +93,26 @@ tooltip.append("text").attr("x", 15).attr("dy", "1.2em").style(
         "text-anchor", "middle").attr("font-size", "12px").attr(
         "font-weight", "bold");
 
-let saveFile = 'fakenews.csv'; //file to read from
+//let saveFile = 'fakenews.csv'; //file to read from
 //let saveFile = 'fakeNewsMINI.csv';
+let saveFile = 'fakenews_clean_location_lat_long.csv';
 
 
-const map = new ol.Map({
-    target: 'map',
-    layers: [
-      new ol.layer.Tile({
-        source: new ol.source.OSM()
-      }),
-    ],
-    view: new ol.View({
-      center: ol.proj.fromLonLat([-90.82,40.2]),
-      zoom: 4
-    })
-  });
+
 
 //------------------------------------------------------------------------------------------
 //-----------------------------MAIN PROGRAM-------------------------------------------------
 //------------------------------------------------------------------------------------------
 
+initialize_map();
+
+//add_map_point(-86.5861037,34.7303688,"15");
+//add_map_point(-90.82,40.2,"3");
+
 //read in data from csv and populate data array
 d3.csv(saveFile, function (myArraryOfObjects){
     originalData = myArraryOfObjects;
-    console.log(originalData);
+    //console.log(originalData);
     //Radio Buttons
     d3.selectAll("input[name='choice']").on("change", function(){
         selection = this.value;
@@ -118,7 +124,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
 
     //renderNetworkData(myArraryOfObjects);
     renderNetworkData(originalData, -1, -1);
-    console.log(networkData); // debug line to anaylize structure of networkData array
+    //console.log(networkData); // debug line to anaylize structure of networkData array
     //console.log(networkLinks); //debug line to show network links
     //console.log(userNames);
 
@@ -729,6 +735,7 @@ function updateDates(){
     grid.setData(tableData);
     grid.render();
     tableData = renderTableData(originalData, revisedDates[0], revisedDates[revisedDates.length-1])
+    getLocationData(tableData);
     console.log(tableData);
     grid.setData(tableData);
     grid.render();
@@ -794,10 +801,15 @@ function makeTable(inData){
         multiColumnSort: true
     };
 
+    //console.log(inData);
+
     inData.forEach(function(d){
         let datum = {};
         datum.user_name = d.user_name;
         datum.user_location = d.user_location;
+        datum.lng = +d.longitude;
+        datum.lat = +d.latitude;
+        datum.location = d.user_location;
         datum.post_date = d.post_date;
         datum.user_bio = d.user_bio;
         datum.believes_legitimate = d.believes_legitimate;
@@ -824,7 +836,11 @@ function makeTable(inData){
         });
         grid.invalidate();
         grid.render();
-      });
+    });
+
+    //generate points on map
+    //console.log(tableData)
+    getLocationData(tableData)
 }
 
 //-----------------------------
@@ -845,6 +861,8 @@ function renderTableData(myInputData, lowD, highD){
             datum.user_bio = d.user_bio;
             datum.believes_legitimate = d.believes_legitimate;
             datum.tweet_text_body = d.tweet_text_body;
+            datum.lat = d.latitude;
+            datum.lng = d.longitude;
             outputTableData.push(datum);
         }
     })
@@ -873,6 +891,103 @@ function search4row(input){
 //-----------------------------
 //Initialize Map
 //-----------------------------
-function init(){
+function initialize_map() {
+    //navigator.geolocation.getCurrentPosition(onSuccess, onError);
+    vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({color: 'rgba(0, 0, 255, 0.1)'}),
+                stroke: new ol.style.Stroke({color: 'blue', width: 1})
+            })
+        })
+    });
+    map = new ol.Map({
+        target: "map",
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            }),
+            vectorLayer
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([-90.82,40.2]),
+            zoom: 4
+        })
+    });
+}
 
+//------------------------------
+//Add Marker to map
+//------------------------------
+function add_map_point(lng, lat, count) {
+    var textStyle = new ol.style.Style({
+        text: new ol.style.Text({
+                text: count,
+                scale: 1.2,
+                fill: new ol.style.Fill({
+                color: "#fff"
+            }),
+                stroke: new ol.style.Stroke({
+                color: "0",
+                width: 3
+            })
+        }),
+        image: new ol.style.Circle({
+            radius: 10,
+            fill: new ol.style.Fill({color: 'rgba(0, 0, 255, 0.1)'}),
+            stroke: new ol.style.Stroke({color: 'blue', width: 1})
+        }),
+    })
+
+    var feature = new ol.Feature({
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([lng, lat]))
+    })
+
+    feature.setStyle(textStyle);
+    vectorLayer.getSource().addFeature(feature);
+}
+
+
+
+//------------------------------
+//Get location Data
+//  Assumption: If lat and lng data match previous entries then the user location is also the same
+//------------------------------
+function getLocationData(inData){
+    let newTableData = [];
+    
+
+    inData.forEach(function(d){
+        let flag = 0;
+        let datum = {};
+        
+        datum.count=1;
+        datum.lng = +d.lng;
+        datum.lat = +d.lat;
+        datum.location = d.user_location;
+
+        for(var i=0; i<newTableData.length; i++){
+            if((datum.lng==newTableData[i].lng) && (datum.lat==newTableData[i].lat)){
+                flag = 1;
+                newTableData[i].count += 1;
+                break;
+            }
+        }
+
+        if (flag==0){
+            newTableData.push(datum);
+        }
+    })
+
+    console.log(newTableData);
+
+    //clear map
+    vectorLayer.getSource().clear();
+    
+    //add new data points
+    newTableData.forEach(function(d){
+        add_map_point(d.lng,d.lat,(d.count).toString());
+    })
 }
