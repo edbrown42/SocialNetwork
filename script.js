@@ -2,7 +2,7 @@
 //-------------------------------------
 //Variables        TODO: remove ones that are no longer needed
 //-------------------------------------
-let data = [], datesProvided = [], revisedDates = []; tableData = [];
+let data = [], datesProvided = [], revisedDates = []; tableData = []; cellChanges = {};
 var defs, brush,main_yZoom, textScale, x, selector, grid, map, vectorLayer;
 
 let originalData = []; //data read from CSV file will be saved here
@@ -105,9 +105,6 @@ let saveFile = 'fakenews_clean_location_lat_long.csv';
 //------------------------------------------------------------------------------------------
 
 initialize_map();
-
-//add_map_point(-86.5861037,34.7303688,"15");
-//add_map_point(-90.82,40.2,"3");
 
 //read in data from csv and populate data array
 d3.csv(saveFile, function (myArraryOfObjects){
@@ -765,6 +762,29 @@ function search4key(input){
     return key;
 }
 
+
+//-----------------------------
+//Search thru range loop and find the matched position
+//-----------------------------
+function search4location(inLat,inLng){
+    //console.log(input + " " + typeof input)
+    //console.log(tableData)
+    let key = 0;
+    let outputRows = [];
+
+    for(key = 0; key < grid.getDataLength(); key++){
+        if((inLat==grid.getDataItem(key).lat) && (inLng==grid.getDataItem(key).lng)){
+            outputRows.push(key)
+        }
+       /* if(((grid.getDataItem(key).user_location).localeCompare(input))== 0){
+            console.log("Found it. Key = " + key)
+            break;
+        }*/
+    }
+
+    return outputRows;
+}
+
 //-----------------------------
 //Function to make the array of selected dates
 //-----------------------------
@@ -791,12 +811,15 @@ function makeTable(inData){
         {id: "post_date", name: "Post Date", field: "post_date", sortable: true},
         {id: "user_bio", name: "User Bio", field: "user_bio", sortable: true, width: 150},
         {id: "believes_legitimate", name: "Believes Legitimate", field: "believes_legitimate", sortable: true, width: 110},
-        {id: "tweet_text_body", name: "Tweet Text", field: "tweet_text_body", sortable: true, width: 1000, headerCssClass: 'tweets', cssClass: 'left-align'}
+        {id: "tweet_text_body", name: "Tweet Text", field: "tweet_text_body", sortable: true, width: 1000, headerCssClass: 'tweets', cssClass: 'left-align'},
+        {id: "lat", name: "lat", field: "lat", sortable: true, width: 0},
+        {id: "lng", name: "lng", field: "lng", sortable: true, width: 0}
     ];
 
     var options = {
         enableCellNavigation: true,
         enableColumnReorder: false,
+        cellHighlightClass: "current-user",
         cellFlashingCssClass: "current-user",
         multiColumnSort: true
     };
@@ -806,10 +829,10 @@ function makeTable(inData){
     inData.forEach(function(d){
         let datum = {};
         datum.user_name = d.user_name;
-        datum.user_location = d.user_location;
+        datum.user_location = d.user_location_cleaned;
         datum.lng = +d.longitude;
         datum.lat = +d.latitude;
-        datum.location = d.user_location;
+        datum.location = d.user_location_cleaned; //why do I have this line? seems like the datum.user_location is taking care of this
         datum.post_date = d.post_date;
         datum.user_bio = d.user_bio;
         datum.believes_legitimate = d.believes_legitimate;
@@ -857,7 +880,7 @@ function renderTableData(myInputData, lowD, highD){
         if (((lowD == -1) && (highD == -1)) || ((datum.post_date >= lowD) && (datum.post_date <= highD))){
             //populate networkData array
             datum.user_name = d.user_name;
-            datum.user_location = d.user_location;
+            datum.user_location = d.user_location_cleaned;
             datum.user_bio = d.user_bio;
             datum.believes_legitimate = d.believes_legitimate;
             datum.tweet_text_body = d.tweet_text_body;
@@ -916,12 +939,33 @@ function initialize_map() {
             zoom: 4
         })
     });
+
+    //change mouse icon when hovering over a feature
+    map.on('pointermove', function(event) {
+        if (map.hasFeatureAtPixel(event.pixel)) {
+          map.getViewport().style.cursor = 'pointer';
+        } else {
+          map.getViewport().style.cursor = 'inherit';
+        }
+    });
+
+    //listener for click events
+    map.on('click', function(event) {
+        $('.slick-header-columns').children().eq(1).trigger('click');
+        var feature = map.getFeaturesAtPixel(event.pixel)[0];
+        if (feature) {
+          console.log("Found the feature")
+          console.log(feature)
+          //console.log(feature.values_.name)
+          highlightLocation(feature.values_._lat,feature.values_._lng)
+        } 
+    });
 }
 
 //------------------------------
 //Add Marker to map
 //------------------------------
-function add_map_point(lng, lat, count) {
+function add_map_point(lng, lat, count, name) {
     var textStyle = new ol.style.Style({
         text: new ol.style.Text({
                 text: count,
@@ -942,7 +986,10 @@ function add_map_point(lng, lat, count) {
     })
 
     var feature = new ol.Feature({
-        geometry: new ol.geom.Point(ol.proj.fromLonLat([lng, lat]))
+        geometry: new ol.geom.Point(ol.proj.fromLonLat([lng, lat])),
+        name: name,
+        _lng: lng,
+        _lat: lat
     })
 
     feature.setStyle(textStyle);
@@ -957,7 +1004,7 @@ function add_map_point(lng, lat, count) {
 //------------------------------
 function getLocationData(inData){
     let newTableData = [];
-    
+    console.log(inData)
 
     inData.forEach(function(d){
         let flag = 0;
@@ -988,6 +1035,37 @@ function getLocationData(inData){
     
     //add new data points
     newTableData.forEach(function(d){
-        add_map_point(d.lng,d.lat,(d.count).toString());
+        add_map_point(d.lng,d.lat,(d.count).toString(),d.location);
     })
+}
+
+//-------------------
+//--Highlight Location
+//-------------------
+function highlightLocation(inLat,InLng){
+   // $('.slick-header-columns').children().eq(1).trigger('click');
+    cellChanges = {}; 
+    let rows = search4location(inLat,InLng);
+    rows.forEach(function(d){
+        cellChanges[d]={
+            user_name:  "current-user",
+            user_location: "current-user",
+            post_date: "current-user",
+            user_bio: "current-user",
+            believes_legitimate: "current-user",
+            tweet_text_body: "current-user"
+        };
+    })
+
+
+
+    grid.scrollRowToTop(rows[0]);
+    grid.setCellCssStyles("city_highlight",cellChanges)
+    grid.render();
+    //console.log(row);
+    //grid.getColumns().forEach(function(col){
+        //grid.flashCell(row, grid.getColumnIndex(col.id),100);
+        
+    //})
+
 }
