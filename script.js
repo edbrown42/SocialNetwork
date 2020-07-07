@@ -15,17 +15,6 @@ let networkLinksFiltered = []; //updated links list based on drop down selection
 let userNames = ["---ALL USERS---"];
 let sortedUserNames = [];
 
-//adding text to marker
-/*var style = new ol.style.Style({
-    text: new ol.style.Text({
-      font: 'bold 11px "Open Sans", "Arial Unicode MS", "sans-serif"',
-      placement: 'line',
-      fill: new ol.style.Fill({
-        color: 'white'
-      })
-    })
-  });*/
-
 //These correlate to the network graph
 let margin = {top:20, right: 120, bottom: 20, left: 120};
 let width = 1000 - margin.right - margin.left;
@@ -298,12 +287,7 @@ function generateNetworkGraph(nodeData,linkData){
         .enter().append("g")
             .attr("class", "node")
             .on("click",function(d){
-                let row = search4row(d.userName);
-                grid.scrollRowIntoView(row);
-                console.log(row);
-                grid.getColumns().forEach(function(col){
-                    grid.flashCell(row, grid.getColumnIndex(col.id),100);
-                })
+                highlightUser(d.userName);
             })
             .on("mouseover", function(){tooltip.style("display",null);})
             .on("mouseout", function() {tooltip.style("display", "none");})
@@ -893,23 +877,7 @@ function renderTableData(myInputData, lowD, highD){
     return outputTableData;
 }
 
-//-----------------------------
-//Search thru range loop and find the matched position
-//-----------------------------
-function search4row(input){
-    //console.log(input + " " + typeof input)
-    //console.log(tableData)
-    var key = 0;
 
-    for(key = 0; key < grid.getDataLength(); key++){
-        if(((grid.getDataItem(key).user_name).localeCompare(input))== 0){
-            console.log("Found it. Key = " + key)
-            break;
-        }
-    }
-
-    return key;
-}
 
 //-----------------------------
 //Initialize Map
@@ -1039,6 +1007,29 @@ function getLocationData(inData){
     })
 }
 
+
+//-----------------------------
+//Format Array for highlighting
+//-----------------------------
+function format4highlight(inputArray){
+    let changes = {}; 
+
+    //for each row select which columns will be highlight and what style 
+    //CSS file controls actual color output
+    inputArray.forEach(function(d){
+        changes[d]={
+            user_name:  "current-user",
+            user_location: "current-user",
+            post_date: "current-user",
+            user_bio: "current-user",
+            believes_legitimate: "current-user",
+            tweet_text_body: "current-user"
+        };
+    })
+
+    return changes;
+}
+
 //-------------------
 //--Highlight Location
 //-------------------
@@ -1068,4 +1059,40 @@ function highlightLocation(inLat,InLng){
         
     //})
 
+}
+
+//-----------------------------
+//Search thru range loop and find the matched position
+//-----------------------------
+function search4row(userName){
+    let outputRows = [];
+    let key = 0;
+
+    for(key = 0; key < grid.getDataLength(); key++){
+        if(((grid.getDataItem(key).user_name).localeCompare(userName))== 0){
+            outputRows.push(key); //if user found save row number
+        }
+    }
+
+    return outputRows;
+}
+
+//-----------------------------
+//Function to make the table
+//-----------------------------
+function highlightUser(name){
+    //sort table by names
+    $('.slick-header-columns').children().eq(0).trigger('click');
+
+    let rows = search4row(name); //search for rows with the same user name
+    let highlightedRows = format4highlight(rows); //format array for highlighting
+    grid.scrollRowToTop(rows[0]); //scroll first row with user name to the top
+    grid.setCellCssStyles("city_highlight",highlightedRows) //set CSS 
+    grid.render(); //update table
+
+    //grid.scrollRowIntoView(row);
+    //console.log(row);
+    /*grid.getColumns().forEach(function(col){
+        grid.flashCell(row, grid.getColumnIndex(col.id),100);
+    })*/
 }
