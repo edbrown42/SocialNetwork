@@ -2,17 +2,29 @@ body{
     background-color: #D3D3D3 !important;
 }
 
+.topRow{
+    background-color: dodgerblue;
+    font-size: 3em;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-top: -10px;
+}
+
+a:link {
+    color: white; 
+  }
+/*
 #SocialNetwork{
     /*position: absolute;
     display: inline;
     /*left:800px;
     top: 10px;
-    /*background-color: rgb(228, 228, 228); */
+    /*background-color: rgb(228, 228, 228); 
 }
 
 #SocialNetwork > * {
     position: relative;
-}
+}*/
 
 #userSelector{
     display: inline;
@@ -89,6 +101,7 @@ body {
     font-weight: 400;
     text-align: center;
 }
+
 #title {
     font-size: 20px;
     padding-bottom: 10px;
@@ -133,6 +146,21 @@ body {
 }
 
 #map {
-    width: 1000px;
-    height: 425px;
+    width: 45vw;
+    height: 25vw;
+    /*width: 1000px;
+    height: 425px;*/
   }
+
+/* .row > div {
+    margin-top:10px;
+    padding: 20px;
+    outline: 2px solid #ccc;
+    outline-offset: -10px;
+    -moz-outline-radius: 10px;
+    -webkit-outline-radius: 10px;
+ }*/
+
+/*.container {
+    height: 100vh;  
+  }/*

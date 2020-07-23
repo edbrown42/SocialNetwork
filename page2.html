@@ -8,17 +8,21 @@
   	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/css/smoothness/jquery-ui-1.11.3.custom.css" type="text/css"/>
 	<link rel="stylesheet" href="https://6pac.github.io/SlickGrid/examples/examples.css" type="text/css"/>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 </head>
 <body>
-	<a href="/SocialNetwork/index.html">Dataset 1</a>
-    <a href="/SocialNetwork/page2.html">Dataset 2</a>
-	<table>
-		<tr>
-			<td>
-				Table of input Data
-				<div id="myGrid" style="width:850px;height:550px;"></div>
-		  	</td>
-		  	<td>
+	<div class ="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="topRow">
+					FakeVis
+					<a href="/SocialNetwork/index.html" style="color:white; font-size: .5em">Dataset 1</a>
+					<a href="/SocialNetwork/page2.html" style="color: white; font-size: .5em">Dataset 2</a>
+				</div>	
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6">
 				<div id="SocialNetwork" style="width:1000px;height:550px;">
 					<div id="userSelector"></div>
 					<label class="RadioButtons">
@@ -27,13 +31,22 @@
 						<input type="radio" value ="Both" name="choice" checked> Both </input>	
 					</label>
 				</div>
-		  	</td>	
-		</tr>
-		<tr>
-			<td><div id="BarChart"></div></td>
-			<td><div id="map"></div></td>
-		</tr>
-	</table>
+			</div>
+			<div class="col-md-6">
+				<div id="map"></div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12">
+				<div id="BarChart"></div>
+			</div>
+			<div class="col-12">
+				Table of input Data
+				<!--<div id="myGrid" style="width:850px;height:550px;"></div>-->
+				<div id="myGrid"></div>
+			</div>
+		</div>
+	</div>
 
 	<script src="http://d3js.org/d3.v3.min.js"></script>
 	<script src="https://6pac.github.io/SlickGrid/lib/firebugx.js"></script>

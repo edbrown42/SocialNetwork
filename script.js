@@ -4,6 +4,18 @@
 let data = [], datesProvided = [], revisedDates = []; tableData = []; cellChanges = {};
 var defs, brush,main_yZoom, textScale, x, selector, grid, map, vectorLayer, saveFile;
 
+let ScreenWidth = $(window).width();
+let ScreenHeight = $(window).height();
+console.log(ScreenHeight)
+
+//size of sheet
+let elem = document.querySelector('#myGrid');
+//elem.style.width = ScreenWidth;
+elem.style.height = (ScreenHeight/6) + "px";
+//map.style.width = ScreenWidth/2.1;
+//map.style.height = ScreenHeight/2;
+
+
 //brushing results
 let LOWresult = -1;
 let HIGHresult = -1;
@@ -25,13 +37,16 @@ let sortedUserNames = [];
 
 //These correlate to the network graph
 let margin = {top:20, right: 120, bottom: 20, left: 120};
-let width = 1000 - margin.right - margin.left;
-let height = 535 - margin.top - margin.bottom;
+//let width = 1000 - margin.right - margin.left;
+let width = ScreenWidth/2.1 - margin.right - margin.left;
+let height = ScreenHeight/2.1 - margin.top - margin.bottom;
 
 //These correlate to the bar chart
 let barMargin = {top: 40, right: 30, bottom: 35, left: 30};
-let barWidth = 850 - barMargin.left - barMargin.right;
-let barHeight = 425 - barMargin.top - barMargin.bottom;
+//let barWidth = 850 - barMargin.left - barMargin.right;
+let barWidth = ScreenWidth - barMargin.left - barMargin.right;
+//let barHeight = 425 - barMargin.top - barMargin.bottom;
+let barHeight = ScreenHeight/5 - barMargin.top - barMargin.bottom;
 let barWidthPadding = 10;
 
 var zoom = d3.behavior.zoom()
@@ -736,12 +751,16 @@ function updateDates(){
     generateNetworkGraph(networkData,networkLinks);
     tableData = [];
     grid.setData(tableData);
+    grid.resizeCanvas();
     grid.render();
+    
     tableData = renderTableData(originalData, revisedDates[0], revisedDates[revisedDates.length-1])
     getLocationData(tableData);
     console.log(tableData);
     grid.setData(tableData);
+    grid.resizeCanvas();
     grid.render();
+    
 }
 
 //-----------------------------
@@ -815,9 +834,9 @@ function makeTable(inData){
         {id: "user_name", name: "User Name", field: "user_name", sortable: true},
         {id: "user_location", name: "User Location", field: "user_location", sortable: true},
         {id: "post_date", name: "Post Date", field: "post_date", sortable: true},
-        {id: "user_bio", name: "User Bio", field: "user_bio", sortable: true, width: 150},
+        {id: "user_bio", name: "User Bio", field: "user_bio", sortable: true, width: 400},
         {id: "believes_legitimate", name: "Believes Legitimate", field: "believes_legitimate", sortable: true, width: 110},
-        {id: "tweet_text_body", name: "Tweet Text", field: "tweet_text_body", sortable: true, width: 1000, headerCssClass: 'tweets', cssClass: 'left-align'},
+        {id: "tweet_text_body", name: "Tweet Text", field: "tweet_text_body", sortable: true, width: 1250, headerCssClass: 'tweets', cssClass: 'left-align'},
         {id: "lat", name: "lat", field: "lat", sortable: true, width: 0},
         {id: "lng", name: "lng", field: "lng", sortable: true, width: 0}
     ];
@@ -864,7 +883,9 @@ function makeTable(inData){
           return 0;
         });
         grid.invalidate();
+        grid.resizeCanvas();
         grid.render();
+        
     });
 
     grid.onClick.subscribe(function(e, args) {
@@ -885,7 +906,9 @@ function makeTable(inData){
         };
         //grid.scrollRowToTop(rows[0]); //scroll first row with user name to the top
         grid.setCellCssStyles("city_highlight",highlightedRows ) //set CSS 
+        grid.resizeCanvas();
         grid.render(); //update table
+        
 
         //update other views
         zoomOnMap(item.lng,item.lat);
@@ -1347,7 +1370,9 @@ function highlightLocation(inLat,InLng){
 
     grid.scrollRowToTop(rows[0]);
     grid.setCellCssStyles("city_highlight",cellChanges)
+    grid.resizeCanvas();
     grid.render();
+    
     //console.log(row);
     //grid.getColumns().forEach(function(col){
         //grid.flashCell(row, grid.getColumnIndex(col.id),100);
@@ -1383,7 +1408,9 @@ function highlightUser(name){
     let highlightedRows = format4highlight(rows); //format array for highlighting
     grid.scrollRowToTop(rows[0]); //scroll first row with user name to the top
     grid.setCellCssStyles("city_highlight",highlightedRows) //set CSS 
+    grid.resizeCanvas();
     grid.render(); //update table
+    
 
     //grid.scrollRowIntoView(row);
     //console.log(row);
