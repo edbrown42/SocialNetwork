@@ -1,13 +1,21 @@
-
 //-------------------------------------
 //Variables        TODO: remove ones that are no longer needed
 //-------------------------------------
 let data = [], datesProvided = [], revisedDates = []; tableData = []; cellChanges = {};
-var defs, brush,main_yZoom, textScale, x, selector, grid, map, vectorLayer;
+var defs, brush,main_yZoom, textScale, x, selector, grid, map, vectorLayer, saveFile;
+
+//brushing results
+let LOWresult = -1;
+let HIGHresult = -1;
+
+let view = new ol.View({
+    center: ol.proj.fromLonLat([-90.82,40.2]),
+    zoom: 4
+});
 
 let originalData = []; //data read from CSV file will be saved here
-let legitColor = 'Green'; //color to represent Believes_legitimate: True
-let notLegitColor = 'Red'; //color to represent Believes_legitimate: False
+let legitColor = 'Red'; //color to represent Believes_legitimate: True
+let notLegitColor = 'Blue'; //color to represent Believes_legitimate: False
 let networkData = [];
 let networkLinks = [];
 let networkDataFiltered = []; //updated nodes list based on drop down selection
@@ -84,9 +92,15 @@ tooltip.append("text").attr("x", 15).attr("dy", "1.2em").style(
 
 //let saveFile = 'fakenews.csv'; //file to read from
 //let saveFile = 'fakeNewsMINI.csv';
-let saveFile = 'fakenews_clean_location_lat_long.csv';
 
-
+let pagename= location.pathname.split('/').pop();
+console.log(pagename)
+//console.log(pagename.localeCompare("page2.html"))
+if ((pagename.localeCompare("page2.html"))){
+    saveFile = 'fakenews_clean_location_lat_long.csv';
+}else{
+    saveFile = 'fakenews_no_22_lat_long.csv';
+}
 
 
 //------------------------------------------------------------------------------------------
@@ -143,7 +157,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
     d3.select("#Selector")
         .on("change", function(d) {
             let index = this.value;
-            //console.log(index)
+            console.log(index)
             updateNetwork(index);
         })
 
@@ -170,6 +184,7 @@ function renderNetworkData(myInputData, lowD, highD){
 
         //storing the data we want from the csv into the datum object (user info)
         datum.userID = d.user_id; 
+        datum.bio= d.user_bio;
         datum.userName = d.user_name;
         datum.legitCount = 0; //set initial total count to 0
         datum.notLegitCount = 0; //set initial total count to 0
@@ -291,11 +306,17 @@ function generateNetworkGraph(nodeData,linkData){
             })
             .on("mouseover", function(){tooltip.style("display",null);})
             .on("mouseout", function() {tooltip.style("display", "none");})
+            .on("dblclick.zoom", function(d) {
+                var dcx = (width/2-d.x*zoom.scale());
+                var dcy = (height/2-d.y*zoom.scale());
+                zoom.translate([dcx,dcy]);
+                    svgSoical.attr("transform", "translate("+ dcx + "," + dcy  + ")scale(" + zoom.scale() + ")");
+                })
             .on("mousemove",function(d) {
                 tooltip.style("left", d3.event.pageX+10+"px");
                 tooltip.style("top", d3.event.pageY-25+"px");
                 tooltip.style("display", "inline-block");
-                tooltip.select("text").html("User: "+d.userName+'<br/>'+"Legitimate: " + d.legitCount+'<br/>'+"Not Legitimate: "+d.notLegitCount);})
+                tooltip.select("text").html("User: "+d.userName+'<br/>'+"Legitimate: " + d.legitCount+'<br/>'+"Not Legitimate: "+d.notLegitCount+ '<br/>' + "User Bio: " + d.bio);})
             .call(force.drag);
 
     //add the nodes
@@ -399,6 +420,7 @@ function updateNetwork(selected){
                 newNames.push(networkLinksFiltered[i].target.userName)
             }
         }
+        //console.log(newNames);
         //loop through and add new names based on sourceID
         for(var i=0;i<networkLinksFiltered.length;i++){
             let found = 0;
@@ -576,8 +598,8 @@ function generateBarChart(rawData) {
         .style("text-anchor", "start")
         .text(function(d, i) { 
             switch (i) {
-            case 0: return "Believes_legitimate: False";
-            case 1: return "Believes_legitimate: True";
+            case 0: return "Believes Not Legitimate";
+            case 1: return "Believes Legitimate";
             case 2: return "Neutral";
             }
         });
@@ -698,8 +720,8 @@ function updateDates(){
         revisedDates = datesProvided; //if brush is empty set the new dates to the original dates
     } else {
         let brushExtent = brush.extent(); //store brush positions
-        let LOWresult = search4key(+brushExtent[0]);
-        let HIGHresult = search4key(+brushExtent[1]);
+        LOWresult = search4key(+brushExtent[0]);
+        HIGHresult = search4key(+brushExtent[1]);
        // console.log("Date index: " + LOWresult + " to " + HIGHresult);
         revisedDates = newDates(LOWresult, HIGHresult);
     }
@@ -845,10 +867,285 @@ function makeTable(inData){
         grid.render();
     });
 
+    grid.onClick.subscribe(function(e, args) {
+        console.log('clicked: ');
+        console.log(args);
+        var item = args.grid.getData()[args.row];
+        console.log(item);
+        
+        //highlight row
+        let highlightedRows = {};
+        highlightedRows[args.row] = {
+            user_name:  "current-user",
+            user_location: "current-user",
+            post_date: "current-user",
+            user_bio: "current-user",
+            believes_legitimate: "current-user",
+            tweet_text_body: "current-user"
+        };
+        //grid.scrollRowToTop(rows[0]); //scroll first row with user name to the top
+        grid.setCellCssStyles("city_highlight",highlightedRows ) //set CSS 
+        grid.render(); //update table
+
+        //update other views
+        zoomOnMap(item.lng,item.lat);
+        updateNetworkfromName(item.user_name);
+      });
+
     //generate points on map
     //console.log(tableData)
     getLocationData(tableData)
 }
+
+//-----------------------------
+//Zoom on Map based on given coordinates
+//-----------------------------
+function zoomOnMap(lats,lngs){
+    map.getView().setCenter(ol.proj.transform([lats, lngs], 'EPSG:4326', 'EPSG:3857'));
+    map.getView().setZoom(10);
+}
+
+//-------------------------------------------------------------------
+//Update function based off drop down menu
+//-------------------------------------------------------------------
+function updateNetworkfromName(selected){
+    console.log(networkData)
+    console.log(selected)
+    let position = null; //postion of selected user in network data array
+
+    //find entry within networkData
+    for(var i = 0; i<networkData.length;i++){
+        if (networkData[i].userName == selected){
+            position = i;
+            //console.log("found it: " + selected + " "+ position); //debug line
+            //console.log(networkData[i]);
+            //console.log(sortedUserNames[selected]);
+            break;
+        }
+    }
+
+    
+    //make a new links list (filtered by people in "selected's" network)
+    networkLinksFiltered = []; //clear list
+    for(var i = 0; i<networkLinks.length;i++){
+        if ((networkLinks[i].target.userName == networkData[position].userName)||(networkLinks[i].source.userName == networkData[position].userName)) {
+            networkLinksFiltered.push(networkLinks[i]);
+        }
+    }
+    //console.log(networkLinksFiltered);
+
+    //make a new list of users based off of who is in "selected's" network
+    let newNames = [];
+    newNames.push(selected); //push selected user name onto list
+    //loop through and add new names based on targetID
+    for(var i=0;i<networkLinksFiltered.length;i++){
+        let found = 0;
+        for (var j=0;j<newNames.length;j++){
+            if(networkLinksFiltered[i].target.userName==newNames[j]){
+                found = 1;
+                break
+            }
+        }
+        if (found==0){
+            newNames.push(networkLinksFiltered[i].target.userName)
+        }
+    }
+    //console.log(newNames);
+    //loop through and add new names based on sourceID
+    for(var i=0;i<networkLinksFiltered.length;i++){
+        let found = 0;
+        for (var j=0;j<newNames.length;j++){
+            if(networkLinksFiltered[i].source.userName==newNames[j]){
+                found = 1;
+                break
+            }
+        }
+        if (found==0){
+            newNames.push(networkLinksFiltered[i].source.userName)
+        }
+    }
+    //console.log(newNames)
+
+    //make a new node list (filtered by people in "selected's" network)
+    networkDataFiltered = []; //clear list
+    for(var i=0;i<networkData.length;i++){
+        for(var j=0;j<newNames.length;j++){
+            if(networkData[i].userName == newNames[j]){
+                networkDataFiltered.push(networkData[i]);
+            }
+        }
+    }
+    //console.log(networkDataFiltered)
+
+    //clear graph
+    d3.selectAll(".node").remove();
+    d3.selectAll("path").remove();
+    //redraw graph
+    generateNetworkGraph(networkDataFiltered,networkLinksFiltered);
+
+}
+
+//-------------------------------------------------------------------
+//Update function based off location select on map
+//-------------------------------------------------------------------
+function updateNetworkfromLocation(_lats,_lngs){
+    console.log(networkData)
+    //console.log(_lats + " " + _lngs)
+    let locNames =[];
+    let flag=0;
+    networkDataFiltered = [] //reset array
+    networkLinksFiltered = [] //reset array
+
+    //gather list of names at given coords
+    originalData.forEach(function(d){
+        if( (+(d.latitude)==+(_lats)) && (+(d.longitude)==+(_lngs)) ){
+            //console.log("Found: " + d.user_name)
+            flag=0;
+            //only add if its a unique name
+            for(let i=0;i<locNames.length;i++){
+                if (!((d.user_name).localeCompare((locNames[i])))){
+                    flag=1; //toggle flag if name is already in list
+                }
+            }
+            //add if flag is unchanged
+            if (flag==0){
+                locNames.push(d.user_name)
+            }
+            
+        }
+    })
+    console.log(locNames)
+
+    //change names to user ID
+    let userIDs = [];
+    console.log(originalData)
+    locNames.forEach(function(d){
+        originalData.forEach(function(e){
+            if (!((e.user_name).localeCompare((d)))){
+                userIDs.push(e.user_id);
+            }
+        })
+    })
+    console.log(userIDs)
+
+
+    originalData.forEach(function (d){
+        let datum = {}; //blank object to parse data from each line into
+        let tweetDatum = {};
+
+        //storing the data we want from the csv into the datum object (user info)
+        datum.userID = d.user_id; 
+        datum.bio= d.user_bio;
+        datum.userName = d.user_name;
+        datum.legitCount = 0; //set initial total count to 0
+        datum.notLegitCount = 0; //set initial total count to 0
+        datum.tweets = [];
+        //storing the data we want from the csv into the tweet object (tweet info)
+        tweetDatum.tweetID = d.tweet_id;
+        tweetDatum.retweet =  d.retweet_from;
+        tweetDatum.date = d.post_date;
+        let tempDate = d.post_date.slice(1,11); //temp date will be used to compare to the 
+        tweetDatum.believed = d.believes_legitimate;
+        //update legit/notLegit count
+        if (tweetDatum.believed == " True "){
+            datum.legitCount++;
+        }else{
+            datum.notLegitCount++;
+        }
+
+        //console.log(revisedDates)
+
+        //is temp date in range of revised Dates
+        let dateFlag = 0;
+        if(!(revisedDates.length == 0)){
+            revisedDates.forEach(function(e){
+                if (!((tempDate).localeCompare(e)==0)){
+                    dateFlag=1; //toggle flag 
+                }
+            })
+        }
+        //console.log("Date Flag: " + dateFlag)
+        //console.log(revisedDates.length)
+
+        //is user one of them at our location
+        let userFlag = 0;
+        userIDs.forEach(function(f){
+            if (+datum.userID==+f){
+                userFlag=1; //toggle flag 
+            }else if(+tweetDatum.retweet==+f){
+                userFlag=1; //toggle flag 
+            }
+        })
+
+        
+        if(userFlag==1){
+            if ((revisedDates.length == 0) || (dateFlag==1)){
+                //populate networkData array
+                if(networkDataFiltered.length == 0){
+                    //if data is empty (IE this is the first entry) add first element
+                    datum.tweets.push(tweetDatum);
+                    let newLength = networkDataFiltered.push(datum);
+                    //userNames.push(datum.userName); //already have a list of user names in locNames array
+                } else {
+                    //search existing data to see if user has been entered yet
+                    let found = 0; //flag to see if user already exist
+                    for(var i=0;i<networkDataFiltered.length;i++){
+                        if (+networkDataFiltered[i].userID == +datum.userID){
+                            //if user already exist
+                            found =1; //toggle flag
+                            let newLength = networkDataFiltered[i].tweets.push(tweetDatum) //push tweet data to the user
+                                    //update legit/notLegit count
+                            if (tweetDatum.believed == " True "){
+                                networkDataFiltered[i].legitCount++;
+                            }else{
+                                networkDataFiltered[i].notLegitCount++;
+                            }
+                            break;
+                        }
+                    }
+                    //if not an existing user push data
+                    if (found == 0){
+                        datum.tweets.push(tweetDatum);
+                        let newLength = networkDataFiltered.push(datum); 
+                        //userNames.push(datum.userName); //already have a list of user names in locNames array
+                    }
+                }
+    
+                //if the data is retweeted create a link
+                if (tweetDatum.retweet != " None "){
+                    let linkDatum = {}; //create a new object to store the link data
+                    linkDatum.source = null;
+                    linkDatum.target = null;
+    
+                    //loop thru and find index of original tweet and retweet
+                    for(var i = 0; i<networkDataFiltered.length; i++){
+                        if (networkDataFiltered[i].userID == tweetDatum.retweet){
+                            linkDatum.source = i; //position of original tweet
+                        }
+                        if (networkDataFiltered[i].userID == datum.userID){
+                            linkDatum.target = i; //position of the retweet
+                        }
+                    }
+    
+                    //add link to array
+                    if ((linkDatum.source != null) && (linkDatum.target != null)){
+                        let newLinkLength = networkLinksFiltered.push(linkDatum);
+                    }
+                }
+            }
+        }
+    })
+    console.log(networkDataFiltered)
+    console.log(networkLinksFiltered)
+    //clear graph
+    d3.selectAll(".node").remove();
+    d3.selectAll("path").remove();
+    //redraw graph
+    generateNetworkGraph(networkDataFiltered,networkLinksFiltered);
+}
+
+
+
 
 //-----------------------------
 //Render new data for table based on date ranges
@@ -902,10 +1199,7 @@ function initialize_map() {
             }),
             vectorLayer
         ],
-        view: new ol.View({
-            center: ol.proj.fromLonLat([-90.82,40.2]),
-            zoom: 4
-        })
+        view: view
     });
 
     //change mouse icon when hovering over a feature
@@ -926,6 +1220,7 @@ function initialize_map() {
           console.log(feature)
           //console.log(feature.values_.name)
           highlightLocation(feature.values_._lat,feature.values_._lng)
+          updateNetworkfromLocation(feature.values_._lat,feature.values_._lng)
         } 
     });
 }
@@ -972,7 +1267,7 @@ function add_map_point(lng, lat, count, name) {
 //------------------------------
 function getLocationData(inData){
     let newTableData = [];
-    console.log(inData)
+    //console.log(inData)
 
     inData.forEach(function(d){
         let flag = 0;
@@ -996,7 +1291,7 @@ function getLocationData(inData){
         }
     })
 
-    console.log(newTableData);
+    //console.log(newTableData);
 
     //clear map
     vectorLayer.getSource().clear();
