@@ -1,3 +1,7 @@
+body{
+    background-color: #D3D3D3 !important;
+}
+
 #SocialNetwork{
     /*position: absolute;
     display: inline;
@@ -102,7 +106,7 @@ body {
 }
 
 .brush {
-    fill: lightgray;
+    fill: darkgrey;
     fill-opacity: .75;
     shape-rendering: crispEdges;
   }
