@@ -1,0 +1,166 @@
+body{
+    background-color: #D3D3D3 !important;
+}
+
+.topRow{
+    background-color: dodgerblue;
+    font-size: 3em;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-top: -10px;
+}
+
+a:link {
+    color: white; 
+  }
+/*
+#SocialNetwork{
+    /*position: absolute;
+    display: inline;
+    /*left:800px;
+    top: 10px;
+    /*background-color: rgb(228, 228, 228); 
+}
+
+#SocialNetwork > * {
+    position: relative;
+}*/
+
+#userSelector{
+    display: inline;
+    left: 0;
+}
+
+.RadioButtons{
+    display: inline-block;
+    vertical-align: top;
+}
+
+/*#BarChart{
+    position: absolute;
+    display: inline;
+    font: 10px sans-serif;
+    shape-rendering: crispEdges;
+}*/
+
+
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+circle {
+  /*fill: #ccc;*/
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+text {
+  fill: #000;
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+.toolTip {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        position: absolute;
+        width: auto;
+        height: auto;
+        background: none repeat scroll 0 0 white;
+        border: 0 none;
+        border-radius: 8px 8px 8px 8px;
+        box-shadow: -3px 3px 15px #888888;
+        color: black;
+        font: 12px sans-serif;
+        padding: 5px;
+        text-align: center;
+    }
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+path.domain {
+    stroke: none;
+}
+ 
+.y .tick line {
+    stroke: #ddd;
+}
+
+.x.axis path {
+    display: block;
+}
+body {
+    font-size: 10px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    text-align: center;
+}
+
+#title {
+    font-size: 20px;
+    padding-bottom: 10px;
+    padding-top: 20px;
+    font-weight: 300;
+}
+
+#explanation {
+    font-size: 12px;
+    max-width: 620px;
+    margin: 0 auto;
+    padding-top: 10px;
+    color: #ababab;
+    font-weight: 300;
+}
+
+.brush {
+    fill: darkgrey;
+    fill-opacity: .75;
+    shape-rendering: crispEdges;
+  }
+.resize {
+    display: inline !important; /* show when empty */
+    fill: #7A7A7A;
+    fill-opacity: 1;
+    stroke: #7A7A7A;
+    stroke-width: 2px;
+}
+
+/*CSS for highlighting spreadsheet*/
+.current-user {
+    border: 1px solid black;
+    background: orange;
+}
+
+.slick-header-column.tweets {
+    text-align: left;
+}
+
+.left-align{
+    text-align: left;
+}
+
+#map {
+    width: 45vw;
+    height: 18vw;
+    /*width: 1000px;
+    height: 425px;*/
+  }
+
+/* .row > div {
+    margin-top:10px;
+    padding: 20px;
+    outline: 2px solid #ccc;
+    outline-offset: -10px;
+    -moz-outline-radius: 10px;
+    -webkit-outline-radius: 10px;
+ }*/
+
+/*.container {
+    height: 100vh;  
+  }/*
