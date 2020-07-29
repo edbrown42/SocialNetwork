@@ -524,7 +524,7 @@ function gatherBarChartData(inputData){
 function generateBarChart(rawData) {
     let subgroups = ["legitimate","notLegitimate"];
 
-    datesProvided = d3.map(rawData,function(d){return d.date}).keys();
+    //datesProvided = d3.map(rawData,function(d){return d.date}).keys();
     //console.log(datesProvided)
     
     //transpose the data into layers
@@ -534,7 +534,44 @@ function generateBarChart(rawData) {
                 return {x: (d.date), y:+d[tweet]};
             });
         }));
-    //console.log(layers);
+    console.log(layers);
+
+    //search and insert any missing dates into layers group
+    let datesLength=layers[0].length;
+
+    for(var i=0;i<datesLength-1;i++){
+        let year1 = layers[0][i].x.slice(0,4);
+        let month1 = layers[0][i].x.slice(5,7);
+        let day1 = layers[0][i].x.slice(8);
+
+        let year2 = layers[0][i+1].x.slice(0,4);
+        let month2 = layers[0][i+1].x.slice(5,7);
+        let day2 = layers[0][i+1].x.slice(8);
+
+        
+        if (((+year1==+year2)) && (+month1==+month2) && (+day1+1 != +day2)){
+            let newdate = {};
+            if(+day1<8){
+                newdate = year1 + "-" + month1 + "-" + "0" + (+day1+1);
+            }else{
+                newdate = year1 + "-" + month1 + "-" + (+day1+1);
+            }
+
+            newdate= {x: newdate, y:0, y0:0};
+            layers[0].splice(i+1,0,newdate);
+            layers[1].splice(i+1,0,newdate);
+            datesLength++;
+            //console.log(" New Date is " + newdate);
+        }
+
+        //console.log(year1 + "-" + month1 + "-" + day1)
+    }
+    console.log("Revised Dates")
+    console.log(layers)
+
+    //make an array of overall dates
+    datesProvided = d3.map(layers[0],function(d){return d.x}).keys();
+    console.log(datesProvided)
 
     // Set x, y and colors
     x = d3.scale.ordinal()
