@@ -8,10 +8,10 @@ let ScreenWidth = $(window).width();
 let ScreenHeight = $(window).height();
 console.log(ScreenHeight)
 
-//size of sheet
+//size of sheet view
 let elem = document.querySelector('#myGrid');
 //elem.style.width = ScreenWidth;
-elem.style.height = (ScreenHeight/6) + "px";
+elem.style.height = (ScreenHeight/4.25) + "px";
 //map.style.width = ScreenWidth/2.1;
 //map.style.height = ScreenHeight/2;
 
@@ -38,16 +38,16 @@ let sortedUserNames = [];
 //These correlate to the network graph
 let margin = {top:20, right: 120, bottom: 20, left: 120};
 //let width = 1000 - margin.right - margin.left;
-let width = ScreenWidth/2.15 - margin.right - margin.left;
-let height = ScreenHeight/3.1 - margin.top - margin.bottom;
+let width = ScreenWidth/2.2 - margin.right - margin.left;
+let height = ScreenHeight/3.125 - margin.top - margin.bottom;
 
 //These correlate to the bar chart
-let barMargin = {top: 40, right: 30, bottom: 35, left: 30};
+let barMargin = {top: 5, right: 30, bottom: 20, left: 30};
 //let barWidth = 850 - barMargin.left - barMargin.right;
 let barWidth = ScreenWidth/1.05 - barMargin.left - barMargin.right;
 //let barHeight = 425 - barMargin.top - barMargin.bottom;
-let barHeight = ScreenHeight/5 - barMargin.top - barMargin.bottom;
-let barWidthPadding = 10;
+let barHeight = ScreenHeight/3.8 - barMargin.top - barMargin.bottom;
+let barWidthPadding = 5;
 
 var zoom = d3.behavior.zoom()
     .scaleExtent([-5,10])
@@ -110,12 +110,15 @@ tooltip.append("text").attr("x", 15).attr("dy", "1.2em").style(
 
 let pagename= location.pathname.split('/').pop();
 console.log(pagename)
-//console.log(pagename.localeCompare("page2.html"))
-if ((pagename.localeCompare("page2.html"))){
-    saveFile = 'fakenews_clean_location_lat_long.csv';
+console.log("Value: " + (pagename.localeCompare("page2.html")))
+if ((pagename.localeCompare("page2.html"))==0){
+    //saveFile = 'fakenews_clean_location_lat_long.csv';
+    saveFile= 'dataset2.csv';
 }else{
-    saveFile = 'fakenews_no_22_lat_long.csv';
+    //saveFile = 'fakenews_no_22_lat_long.csv';
+    saveFile= 'dataset1.csv';
 }
+console.log(saveFile)
 
 
 //------------------------------------------------------------------------------------------
@@ -145,7 +148,7 @@ d3.csv(saveFile, function (myArraryOfObjects){
 
     //generate bar chart data
     let rawBarData = gatherBarChartData(myArraryOfObjects);
-    //console.log(rawBarData);
+    console.log(rawBarData);
 
 
     // create the drop down menu of users
@@ -483,6 +486,7 @@ function updateNetwork(selected){
 function gatherBarChartData(inputData){
     let outputData = [];
 
+    console.log(inputData)
     inputData.forEach(function (d){
         let datum = {};
         datum.date = d.post_date.slice(1,11);
@@ -631,14 +635,50 @@ function generateBarChart(rawData) {
         });
 
     // Draw legend
-    let legend = svg.selectAll(".legend")
+
+    var legend = svg.append('g')
+            .attr('class', 'legend')
+            .attr('transform', 'translate(' + (barWidth - 100) + ', 0)');
+
+        legend.selectAll('rect')
+            .data(colors)
+            .enter()
+            .append('rect')
+            .attr('x', 0)
+            .attr('y', function(d, i){
+                return i * 18;
+            })
+            .attr('width', 12)
+            .attr('height', 12)
+            .style("fill", function(d, i) {return colors.slice().reverse()[i];});
+        
+        legend.selectAll('text')
+            .data(colors)
+            .enter()
+            .append('text')
+            .text(function(d, i) { 
+                switch (i) {
+                case 0: return "Believes Not Legitimate";
+                case 1: return "Believes Legitimate";
+                case 2: return "Neutral";
+                }
+            })
+            .attr('x', 18)
+            .attr('y', function(d, i){
+                return i * 18;
+            })
+            .attr('text-anchor', 'start')
+            .attr('alignment-baseline', 'hanging');
+                
+   /* let legend = svg.selectAll(".legend")
         .data(colors)
         .enter().append("g")
         .attr("class", "legend")
+        //.attr("transform", function(d, i) { return "translate(-125," + (-19+(i * -19)) + ")"; });
         .attr("transform", function(d, i) { return "translate(-125," + (-19+(i * -19)) + ")"; });
  
     legend.append("rect")
-        .attr("x", barWidth - 18)
+        //.attr("x", barWidth - 18)
         .attr("width", 18)
         .attr("height", 18)
         .style("fill", function(d, i) {return colors.slice().reverse()[i];});
@@ -654,7 +694,7 @@ function generateBarChart(rawData) {
             case 1: return "Believes Legitimate";
             case 2: return "Neutral";
             }
-        });
+        });*/
 
     // Prep the tooltip bits, initial display is hidden
     let tooltip = svg.append("g")
