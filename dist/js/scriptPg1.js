@@ -21,7 +21,7 @@ let ScreenWidth = $(window).width();
 let ScreenHeight = $(window).height();
 
 // Parse the date / time
-var parseDate = d3.time.format(" %Y-%m-%dT%H:%M:%S.%LZ"); //format of time within CSV file
+var parseDate = d3.time.format(" %Y-%m-%dT%H:%M:%S.%LZ "); //format of time within CSV file
 
 //bar chart--------------------------------------------------------------
 //These correlate to the bar chart
@@ -68,8 +68,6 @@ let tooltip = d3.select("body").append("div").attr("class", "toolTip").style("di
 tooltip.append("text").attr("x", 15).attr("dy", "1.2em").style(
         "text-anchor", "middle").attr("font-size", "12px").attr(
         "font-weight", "bold");
-
-//var radioData = ["Believes Legitimate", "Believes Not Legitimate", "Both"];
 //-------------------------------------------------------------------------
 
 
@@ -109,7 +107,7 @@ console.log(saveFile)*/
 //------------------------------------------------------------------------------------------
 initialize_map();
 //d3.csv("bar-data.csv", function(error, data) {
-d3.csv("dataset2.csv", function(error, data) {
+d3.csv("dataset1.csv", function(error, data) {
 //d3.csv(saveFile,function(error, data) {
     data.forEach(function (d){
         //gather input values
